@@ -1,41 +1,26 @@
-<!-- PROJECT LOGO -->
-<br />
-<p align="center">
-  <a href="https://github.com/BjarneAndersson/Ricochet-Robots>
-    <img src="images/logo.png" alt="Logo" width="80" height="80">
+<div align="center">
 
-<h3 align="center">Ricochet Robots</h3>
+# Ricochet Robots
 
-  <p align="center">
-    A online multiplayer adaptation of the board game Ricochet Robots.
-    <br />
-    <a href="https://github.com/BjarneAndersson/Ricochet-Robots"><strong>Explore the docs »</strong></a>
-    <br />
-    <br />
-    <a href="https://github.com/BjarneAndersson/Ricochet-Robots/issues">Report Bug</a>
-    ·
-    <a href="https://github.com/BjarneAndersson/Ricochet-Robots/issues">Request Feature</a>
-  </p>
-</p>
+#### a online multiplayer version of the board game Ricochet Robots
 
+[Explore the docs »](https://github.com/BjarneAndersson/Ricochet-Robots)
 
-<!-- TABLE OF CONTENTS -->
-<details open="open">
-  <summary><h2 style="display: inline-block">Table of Contents</h2></summary>
-  <ol>
-    <li>
-      <a href="#about-the-project">About The Project</a>
-    </li>
-    <li>
-      <a href="#getting-started">Getting Started</a>
-    </li>
-    <li><a href="#usage">Usage</a></li>
-    <li><a href="#roadmap">Roadmap</a></li>
-    <li><a href="#contributing">Contributing</a></li>
-    <li><a href="#contact">Contact</a></li>
-    <li><a href="#acknowledgements">Acknowledgements</a></li>
-  </ol>
-</details>
+[Report Bug](https://github.com/BjarneAndersson/Ricochet-Robots/issues)
+·
+[Request Feature](https://github.com/BjarneAndersson/Ricochet-Robots/issues)
+
+</div>
+
+## Table of Contents
+
+1. [About The Project](#about-the-project)
+2. [Getting Started](#getting-started)
+3. [Usage](#usage)
+4. [Roadmap](#roadmap)
+5. [Contributing](#contributing)
+6. [Contact](#contact)
+7. [Acknowledgements](#acknowledgements)
 
 ## About The Project
 
@@ -50,8 +35,6 @@ Ricochet Robots**.
 4. Run as many clients as you like
 
 ## Usage
-
-<!-- Use this space to show useful examples of how a project can be used. Additional screenshots, code examples and demos work well in this space. You may also link to more resources.-->
 
 Have some fun with your friends and family!
 
