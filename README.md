@@ -39,8 +39,6 @@
 </details>
 
 
-<!-- GETTING STARTED -->
-
 ## Getting Started
 
 1. Get a local copy
@@ -48,7 +46,6 @@
 3. Host a server
 4. Run as many clients as you like
 
-<!-- USAGE EXAMPLES -->
 
 ## Usage
 
@@ -57,17 +54,11 @@
 Have some fun with your friends and family!
 
 
-
-<!-- ROADMAP -->
-
 ## Roadmap
 
 See the [open issues](https://github.com/BjarneAndersson/Ricochet-Robots/issues) for a list of proposed features (and
 known issues).
 
-
-
-<!-- CONTRIBUTING -->
 
 ## Contributing
 
@@ -75,17 +66,12 @@ Unfortunately, since this is a school project for my school graduation, I can't 
 Nevertheless, any feedback and further ideas are **very welcome**.
 
 
-<!-- CONTACT -->
-
 ## Contact
 
 Bjarne Andersson - [@LifeCompiler](https://twitter.com/LifeCompiler) - compiler4life@gmail.com
 
 Project Link: [https://github.com/BjarneAndersson/Ricochet-Robots](https://github.com/BjarneAndersson/Ricochet-Robots)
 
-
-
-<!-- ACKNOWLEDGEMENTS -->
 
 ## Acknowledgements
 
