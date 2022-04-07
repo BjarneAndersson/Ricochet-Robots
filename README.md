@@ -32,12 +32,15 @@
     <li><a href="#usage">Usage</a></li>
     <li><a href="#roadmap">Roadmap</a></li>
     <li><a href="#contributing">Contributing</a></li>
-    <li><a href="#license">License</a></li>
     <li><a href="#contact">Contact</a></li>
     <li><a href="#acknowledgements">Acknowledgements</a></li>
   </ol>
 </details>
 
+## About The Project
+
+Hi everyone! Welcome to my school graduation project. This is the online multiplayer version of the board game: **
+Ricochet Robots**.
 
 ## Getting Started
 
@@ -45,7 +48,6 @@
 2. Have pygame installed
 3. Host a server
 4. Run as many clients as you like
-
 
 ## Usage
 
