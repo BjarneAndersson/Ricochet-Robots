@@ -6,6 +6,8 @@ import sys
 from _thread import *
 from datetime import datetime
 
+os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = "hide"  # hide pycharm import msg
+
 import Game_Objects
 from Game import Game
 from Helpers import Colors
@@ -202,6 +204,6 @@ if __name__ == '__main__':
     port = s.getsockname()[1]  # port
 
     s.listen()
-    print(f'Server Started\nIP: {ip_address} | Port: {port}\nWaiting for a connection\n')
+    print(f'Server Started\nIP: {ip_address} | Port: {port}\nWaiting for connections\n')
 
     main()
