@@ -1,6 +1,7 @@
 import os
 import pickle
 import socket
+import netifaces
 import sys
 from _thread import *
 from datetime import datetime
@@ -15,10 +16,16 @@ active_user_count: int = 0
 game_id: int
 
 
-def process_data(data: str):  # process incoming data
-    action = ""
-    path = []
-    queries = {}
+def process_data(data: str):
+    """
+    process incoming data
+    :param data: incoming data stream
+    :return:
+    """
+
+    action: str
+    path: list
+    queries: dict = {}
 
     action, path_plus_queries = data.split(' ')
     path_plus_queries_split = path_plus_queries.split('?')
@@ -163,7 +170,7 @@ def main():
 
     game_id = db.get_next_id('games')
     game = Game(db, game_id)
-    print(f'New game created!\nSize of game-object: {sys.getsizeof(game)} [bytes]')
+    print(f'New game created!')
 
     while True:
         connection, address = s.accept()
@@ -184,15 +191,17 @@ def main():
 if __name__ == '__main__':
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-    server = "192.168.1.113"
-    port = 5555
+    ip_address = netifaces.ifaddresses(netifaces.interfaces()[0])[netifaces.AF_INET][0][
+        'addr']  # get ip-address of local sys
 
     try:
-        s.bind((server, port))
+        s.bind((ip_address, 0))  # connect to local ip with port 0 -> socket will search for a free port
     except OSError as e:
         str(e)
 
+    port = s.getsockname()[1]  # port
+
     s.listen()
-    print('Server Started\nWaiting for a connection\n')
+    print(f'Server Started\nIP: {ip_address} | Port: {port}\nWaiting for a connection\n')
 
     main()

@@ -123,12 +123,12 @@ def convert_pygame_key_to_direction_str(key) -> str:
         return "right"
 
 
-def main(ip_server):
-    global window, network, colors, player_id, input_field, font
+def main():
+    global window, network, server, colors, player_id, input_field, font
 
     # player_name = input('Please enter your name: ')
     player_name = 'Bjarne'
-    network = Network(ip_server)
+    network = Network(server["ip"], server["port"])
     player_id = network.get_player_id()
     network.send(f"POST user/new?name={player_name}")
 
@@ -168,6 +168,7 @@ def main(ip_server):
 
 if __name__ == '__main__':
     # ip_server = input("IP-address of the server: ")
-    ip_server = "192.168.1.113"
+    server: dict = {"ip": "192.168.1.113",
+                    "port": 5555}
 
-    main(ip_server)
+    main()
