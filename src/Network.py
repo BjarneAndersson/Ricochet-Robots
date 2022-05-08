@@ -7,9 +7,7 @@ class Network:
 
     def __init__(self, ip_server: str, port_server: int):
         self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.server = ip_server
-        self.port = port_server
-        self.address = (self.server, self.port)
+        self.address: tuple = (ip_server, port_server)
         self.player_id = int(self.connect())
 
     def get_player_id(self):
@@ -19,8 +17,8 @@ class Network:
         try:
             self.client.connect(self.address)
             return self.client.recv(2048 * 1).decode()
-        except:
-            pass
+        except Exception as e:
+            print(e)
 
     def send(self, data):
         try:

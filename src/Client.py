@@ -171,7 +171,8 @@ def main():
 
 if __name__ == '__main__':
     # ip_server = input("IP-address of the server: ")
+    port_server = int(input("Port of the server: "))
     server: dict = {"ip": "192.168.1.113",
-                    "port": 5555}
+                    "port": port_server}
 
     main()
