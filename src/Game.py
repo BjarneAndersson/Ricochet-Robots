@@ -16,7 +16,7 @@ from SQL import SQL
 class Game:
     ROWS: int = 16
     COLUMNS: int = 16
-    QUBE_SIZE: int = 50  # pixels
+    FIELD_SIZE: int = 50  # pixels
 
     def __init__(self, db, game_id):
         self.db: SQL = db
@@ -26,30 +26,34 @@ class Game:
         self.robots = []
         self.ready: bool = False
 
-        width_menu_hourglass: int = 1 * self.QUBE_SIZE
-        width_leaderboard: int = 4 * self.QUBE_SIZE
-        height_start_input: int = 3 * self.QUBE_SIZE
+        width_menu_hourglass: int = 1 * self.FIELD_SIZE
+        width_leaderboard: int = 4 * self.FIELD_SIZE
+        height_start_input: int = 3 * self.FIELD_SIZE
 
-        self.board_offset: dict = {'top': self.QUBE_SIZE // 2,
-                                   'bottom': self.QUBE_SIZE // 2 + height_start_input + self.QUBE_SIZE // 2,
-                                   'left': self.QUBE_SIZE // 2 + width_menu_hourglass + self.QUBE_SIZE // 2,
-                                   'right': self.QUBE_SIZE // 2 + width_leaderboard + self.QUBE_SIZE // 2}
+        self.board_offset: dict = {'top': self.FIELD_SIZE // 2,
+                                   'bottom': self.FIELD_SIZE // 2 + height_start_input + self.FIELD_SIZE // 2,
+                                   'left': self.FIELD_SIZE // 2 + width_menu_hourglass + self.FIELD_SIZE // 2,
+                                   'right': self.FIELD_SIZE // 2 + width_leaderboard + self.FIELD_SIZE // 2}
 
         # object initialisation
         self.board: Board = Board(self.db, self.game_id,
                                   {'x': self.board_offset['left'], 'y': self.board_offset['top']}, self.FIELD_SIZE)
 
-        menu_button = MenuButton({'x': self.QUBE_SIZE // 2, 'y': self.QUBE_SIZE // 2},
-                                 {'width': self.QUBE_SIZE, 'height': self.QUBE_SIZE})
+        menu_button = MenuButton({'x': self.FIELD_SIZE // 2, 'y': self.FIELD_SIZE // 2},
+                                 {'width': self.FIELD_SIZE, 'height': self.FIELD_SIZE})
+
         self.menu = Menu({'x': self.board.position['x'], 'y': self.board.position['y']},
-                         {'width': self.QUBE_SIZE, 'height': self.QUBE_SIZE}, menu_button)
-        self.hourglass = Hourglass({'x': self.QUBE_SIZE // 2,
-                                    'y': self.QUBE_SIZE // 2 + self.menu.button.size[
-                                        'height'] + 3 * self.QUBE_SIZE},
-                                   {'width': self.QUBE_SIZE, 'height': 12 * self.QUBE_SIZE})
+                         {'width': self.FIELD_SIZE, 'height': self.FIELD_SIZE}, menu_button)
+
+        self.hourglass = Hourglass({'x': self.FIELD_SIZE // 2,
+                                    'y': self.FIELD_SIZE // 2 + self.menu.button.size[
+                                        'height'] + 3 * self.FIELD_SIZE},
+                                   {'width': self.FIELD_SIZE, 'height': 12 * self.FIELD_SIZE})
         self.individual_solution = IndividualSolution(
-            {'x': self.QUBE_SIZE // 2, 'y': self.board_offset['top'] + self.board.size['height'] + self.QUBE_SIZE // 2},
-            {'width': 4 * self.QUBE_SIZE, 'height': 3 * self.QUBE_SIZE})
+            {'x': self.FIELD_SIZE // 2,
+             'y': self.board_offset['top'] + self.board.size['height'] + self.FIELD_SIZE // 2},
+            {'width': 4 * self.FIELD_SIZE, 'height': 3 * self.FIELD_SIZE})
+
         self.make_robots()
 
         # window initialisation
