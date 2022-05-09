@@ -84,7 +84,7 @@ def threaded_client(connection, address, game):
 
                         elif path[1] == 'field_size':
                             if action == 'GET':
-                                connection.sendall(pickle.dumps(game.QUBE_SIZE))
+                                connection.sendall(pickle.dumps(game.FIELD_SIZE))
 
                         elif path[1] == 'robots':
                             if action == 'GET':  # 'GET game/robots'
@@ -93,7 +93,10 @@ def threaded_client(connection, address, game):
                         elif path[1] == 'target_chips':
                             if path[2] == 'selected':
                                 if action == 'GET':  # 'GET game/target_chips/selected'
-                                    connection.sendall(pickle.dumps(game.selected_chip))
+                                    connection.sendall(pickle.dumps(db.select_where_from_table('chips', ['chip_id'],
+                                                                                               {'game_id': game_id,
+                                                                                                'revealed': 1},
+                                                                                               single_result=True)))
 
                         elif path[1] == 'hourglass':
                             if action == 'GET' and len(path) == 2:  # 'GET game/hourglass'
@@ -135,14 +138,16 @@ def threaded_client(connection, address, game):
 
                         if path[2] == 'name':
                             if action == 'GET':
-                                name = db.select_where_from_table("players", "name", {"player_id": player_id})
+                                name = db.select_where_from_table("players", ["name"], {"player_id": player_id},
+                                                                  single_result=True)
                                 connection.send(str.encode(str(name)))
                             else:  # action == 'POST'
                                 # game.setUserName(player_id, name)
                                 pass
                         elif path[2] == 'solution':
                             if action == 'GET':
-                                solution = db.select_where_from_table("players", "solution", {"player_id": player_id})
+                                solution = db.select_where_from_table("players", ["solution"], {"player_id": player_id},
+                                                                      single_result=True)
                                 connection.send(str.encode(str(solution)))
                 elif path[0] == 'colors':
                     if action == 'GET' and len(path) == 1:  # 'GET colors'
@@ -169,6 +174,7 @@ def main():
     # db.clear_temporary_tables()
 
     game_id = db.get_next_id('games')
+    db.insert('games', {})
     game = Game(db, game_id)
     print(f'New game created!')
 
