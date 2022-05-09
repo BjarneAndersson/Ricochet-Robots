@@ -9,7 +9,6 @@ from Game_Objects import IndividualSolution
 from Game_Objects import Menu
 from Game_Objects import MenuButton
 from Game_Objects import Robot
-from Game_Objects import TargetChip
 from SQL import SQL
 
 
