@@ -29,12 +29,27 @@ class SQL:
         self.cursor_db = self.db.cursor(buffered=True)
         self.cursor_db.execute("SET FOREIGN_KEY_CHECKS=0;")
 
-    def insert(self, table_name, colum_value_pairs: dict):
-        columns = str(list(colum_value_pairs.keys())).replace("[", "(").replace("]", ")").replace("\"", "").replace(
-            "\'", "")  # ['x', 'y'] -> (x, y)
-        values = str(list(colum_value_pairs.values())).replace("[", "(").replace("]", ")").replace("\"",
-                                                                                                   "\'")  # [2, "3"] -> (2, '3')
-        query = f"INSERT INTO {table_name} {columns} VALUES {values};"
+    def insert(self, table_name, column_value_pairs: dict):
+        if len(column_value_pairs) != 0:  # dict not empty
+            columns = str(list(column_value_pairs.keys())).replace("[", "(").replace("]", ")").replace("\"",
+                                                                                                       "").replace(
+                "\'", "")  # ['x', 'y'] -> (x, y)
+            values = str(list(column_value_pairs.values())).replace("[", "(").replace("]", ")").replace("\"",
+                                                                                                        "\'")  # [2, "3"] -> (2, '3')
+            query = f"INSERT INTO {table_name} {columns} VALUES {values};"
+        else:  # column_value_pairs = {}
+            columns = self.get_all_column_names(table_name)
+            values = []
+
+            for column in columns:
+                values.append(f"Default({column})")
+
+            columns = str(columns).replace("[", "(").replace("]", ")").replace("\"", "").replace("\'",
+                                                                                                 "")  # ['x', 'y'] -> (x, y)
+            values = str(values).replace("[", "(").replace("]", ")").replace("\'",
+                                                                             "")  # ['Default(game_id)', 'Default(active_bots)'] -> (Default(game_id), Default(active_bots))
+
+            query = f"INSERT INTO {table_name} {columns} VALUES {values};"
 
         self.cursor_db.execute(query)
 
@@ -104,6 +119,11 @@ class SQL:
         return self.select_where_from_table('information_schema.TABLES', 'AUTO_INCREMENT',
                                             {'table_schema': self.db_name, 'table_name': table_name})
 
+    def get_all_column_names(self, table_name) -> list:
+        result = self.select_where_from_table('INFORMATION_SCHEMA.COLUMNS', 'COLUMN_NAME', {'TABLE_NAME': table_name})
+        result = [column[0] for column in result]
+        return result  # e.g.: ['game_id', 'active_bots', 'created_at']
+
     def clear_temporary_tables(self):
         self.clear_table('players')
         self.clear_table('rounds')
@@ -115,5 +135,8 @@ class SQL:
 
 if __name__ == '__main__':
     db = SQL("localhost", "root", "")
-    r = db.select_where_from_table('players', 'name', {'player_id': 82})
-    print(f"Result: {r}")
+    print(f"games column: {db.get_all_column_names('games')}")
+    print(
+        f"active bots: {db.select_where_from_table('games', 'active_bots', {'game_id': 1}, single_result=True, result_is_list_in_str_format=True)}")
+    print(f"duration: {db.select_where_from_table('games', 'duration', {'game_id': 1}, single_result=True)}")
+    print(f"insert new game: {db.insert('games', {})}")
