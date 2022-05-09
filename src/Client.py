@@ -91,7 +91,7 @@ def draw() -> None:
         robot.draw(window)
 
     if network.send("GET game/target_chips/selected"):
-        network.send("GET game/target_chips/selected").target_space.draw_center(window, network.send(
+        network.send("GET game/target_chips/selected").target.draw_center(window, network.send(
             "GET game/board?&position=center"))
 
     network.send("GET game/menu/button").draw(window)

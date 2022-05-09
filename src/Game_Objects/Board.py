@@ -1,7 +1,7 @@
 import pygame
 
 from .Node import Node
-from .TargetSpace import TargetSpace
+from .Target import Target
 from .Wall import Wall
 
 from src.SQL import SQL
@@ -289,7 +289,7 @@ class Board:
 
         self.add_walls_to_grid()
         self.create_targets()
-        self.add_target_spaces_to_grid()
+        self.add_targets_to_grid()
         return self.grid
 
     def add_walls_to_grid(self) -> None:
@@ -302,18 +302,18 @@ class Board:
         chip_ids = db.select_where_from_table('chips', ['chip_id'], {'game_id': game_id})
         chip_ids = [chip_id[0] for chip_id in chip_ids]
         for chip_id in chip_ids:
-            self.targets.append(TargetSpace(db, game_id, chip_id, {}))
+            self.targets.append(Target(db, game_id, chip_id, {}))
         print(self.targets)
 
-    def add_target_spaces_to_grid(self) -> None:
-        colors_and_symbols_all_target_spaces = db.select_where_from_table('chips', ['color', 'symbol'],
-                                                                          {'game_id': game_id})
-        for color_name, symbol in colors_and_symbols_all_target_spaces:
+    def add_targets_to_grid(self) -> None:
+        colors_and_symbols_all_targets = db.select_where_from_table('chips', ['color', 'symbol'],
+                                                                    {'game_id': game_id})
+        for color_name, symbol in colors_and_symbols_all_targets:
             for target in self.targets:
                 if color_name == target.color_name and symbol == target.symbol:
                     coord = db.select_where_from_table('chips', ['position_column', 'position_row'],
                                                        {'game_id': game_id, 'chip_id': target.chip_id})[0]
-                    self.grid[coord[1]][coord[0]].set_target_space(target)
+                    self.grid[coord[1]][coord[0]].set_target(target)
 
 
 

@@ -1,7 +1,7 @@
 import pygame
 
 from .Object import Object
-from .TargetSpace import TargetSpace
+from .Target import Target
 
 try:
     from src.Helpers import Colors
@@ -12,7 +12,7 @@ except ModuleNotFoundError:
 class Node:
     neighbors: dict
     neighbors_with_wall: list
-    target_space: TargetSpace
+    target: Target
 
     def __init__(self, position: dict, size: dict):
         self.position = position
@@ -23,21 +23,21 @@ class Node:
             self.color = Colors.node['barrier']
 
         self.neighbors = dict()
-        self.target_space = None
+        self.target = None
         self.robot = None
 
     def get_position(self) -> dict:
         return self.position
 
     def reset(self) -> None:
-        self.color = Colors.node_default
+        self.color = Colors.node['default']
 
     def draw(self, window) -> None:
         pygame.draw.rect(window, self.color,
                          (self.position['x'], self.position['y'], self.size['width'], self.size['height']))
 
-        if self.target_space:
-            self.target_space.draw(window, self.position, self.size)
+        if self.target:
+            self.target.draw(window, self.position, self.size)
 
         self.draw_walls(window)
 
@@ -90,5 +90,5 @@ class Node:
     def set_wall(self, direction: str) -> None:
         self.neighbors[direction] = None
 
-    def set_target_space(self, target_space) -> None:
-        self.target_space = target_space
+    def set_target(self, target) -> None:
+        self.target = target

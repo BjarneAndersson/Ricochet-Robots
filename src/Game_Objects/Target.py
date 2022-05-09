@@ -6,12 +6,12 @@ from src.SQL import SQL
 import pygame
 
 
-class TargetSpace:
+class Target:
     def __init__(self, db: SQL, game_id: int, chip_id: int, position_grid_center: dict):
         self.chip_id = chip_id
         self.color_name = db.select_where_from_table('chips', ['color'], {'chip_id': chip_id, 'game_id': game_id},
                                                      single_result=True)
-        self.color: tuple = Colors.target_space[self.color_name]
+        self.color: tuple = Colors.target[self.color_name]
         self.symbol = db.select_where_from_table('chips', ['symbol'], {'chip_id': chip_id, 'game_id': game_id},
                                                  single_result=True)
         self.position_grid_center = position_grid_center
