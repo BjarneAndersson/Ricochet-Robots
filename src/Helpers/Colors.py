@@ -12,24 +12,32 @@ class Colors:
     dark_grey = (18, 18, 18)
     all = purple
 
-    robot_yellow = yellow
-    robot_red = red
-    robot_green = green
-    robot_blue = turquoise
+    robot = {
+        'yellow': yellow,
+        'red': red,
+        'green': green,
+        'blue': turquoise
+    }
 
-    target_space_yellow = yellow
-    target_space_red = red
-    target_space_green = green
-    target_space_blue = turquoise
-    target_space_all = all
+    target = {
+        'yellow': yellow,
+        'red': red,
+        'green': green,
+        'blue': turquoise,
+        'all': all
+    }
 
     wall = grey
-    node_default = dark_grey
-    node_barrier = grey
+    node = {
+        'default': dark_grey,
+        'barrier': grey
+    }
 
-    board_yellow = yellow
-    board_red = red
-    board_green = green
-    board_blue = blue
+    board = {
+        'yellow': yellow,
+        'red': red,
+        'green': green,
+        'blue': blue
+    }
 
     background = dark_grey
