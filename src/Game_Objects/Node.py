@@ -18,9 +18,9 @@ class Node:
         self.position = position
         self.size = size
 
-        self.color = Colors.node_default
+        self.color = Colors.node['default']
         if (position['row'], position['column']) in [(7, 7), (7, 8), (8, 7), (8, 8)]:
-            self.color = Colors.node_barrier
+            self.color = Colors.node['barrier']
 
         self.neighbors = dict()
         self.target_space = None
@@ -37,7 +37,7 @@ class Node:
                          (self.position['x'], self.position['y'], self.size['width'], self.size['height']))
 
         if self.target_space:
-            self.target_space.draw(window)
+            self.target_space.draw(window, self.position, self.size)
 
         self.draw_walls(window)
 
@@ -90,7 +90,5 @@ class Node:
     def set_wall(self, direction: str) -> None:
         self.neighbors[direction] = None
 
-    def set_target_space(self, target_space: TargetSpace) -> None:
+    def set_target_space(self, target_space) -> None:
         self.target_space = target_space
-        self.target_space.position['x'] = self.position['x']
-        self.target_space.position['y'] = self.position['y']
