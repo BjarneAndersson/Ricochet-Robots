@@ -36,8 +36,8 @@ class Game:
                                    'right': self.QUBE_SIZE // 2 + width_leaderboard + self.QUBE_SIZE // 2}
 
         # object initialisation
-        self.board: Board = Board(self.ROWS, self.COLUMNS,
-                                  {'x': self.board_offset['left'], 'y': self.board_offset['top']}, self.QUBE_SIZE)
+        self.board: Board = Board(self.db, self.game_id,
+                                  {'x': self.board_offset['left'], 'y': self.board_offset['top']}, self.FIELD_SIZE)
 
         menu_button = MenuButton({'x': self.QUBE_SIZE // 2, 'y': self.QUBE_SIZE // 2},
                                  {'width': self.QUBE_SIZE, 'height': self.QUBE_SIZE})
@@ -57,11 +57,6 @@ class Game:
             self.board_offset['left'] + self.board.rect.width + self.board_offset['right'],
             self.board_offset['top'] + self.board.rect.height + self.board_offset['bottom'])
 
-        self.target_chips = []
-        self.make_target_chips()
-
-        self.selected_chip: TargetChip = None
-        self.selected_robot: Robot = None
         self.active_player_id: int = None
 
         self.control_move_count: int = 0
@@ -70,26 +65,17 @@ class Game:
         used_positions: list = [{'row': 7, 'column': 7}, {'row': 7, 'column': 8}, {'row': 8, 'column': 7},
                                 {'row': 8, 'column': 8}]
         for color_name in ['red', 'green', 'blue', 'yellow']:
-            row: int = random.randint(0, self.ROWS - 1)
-            column: int = random.randint(0, self.COLUMNS - 1)
+            current_position = {'row': random.randint(0, self.ROWS - 1), 'column': random.randint(0, self.COLUMNS - 1)}
 
-            while {'row': row, 'column': column} in used_positions:
-                row: int = random.randint(0, self.ROWS - 1)
-                column: int = random.randint(0, self.COLUMNS - 1)
+            while current_position in used_positions:
+                current_position = {'row': random.randint(0, self.ROWS - 1),
+                                    'column': random.randint(0, self.COLUMNS - 1)}
 
-            used_positions.append({'row': row, 'column': column})
+            used_positions.append(current_position)
 
-            self.robots.append(
-                Robot(self.board.grid, {'x': column * self.QUBE_SIZE + self.board_offset['left'],
-                                        'y': row * self.QUBE_SIZE + self.board_offset['top'], 'row': row,
-                                        'column': column},
-                      {'width': self.QUBE_SIZE, 'height': self.QUBE_SIZE},
-                      color_name))
-
-    def make_target_chips(self) -> None:
-        for quarter_board in self.board.board.values():
-            for target_space in quarter_board.target_spaces:
-                self.target_chips.append(TargetChip(target_space))
+            self.db.insert('robots',
+                           {'game_id': self.game_id, 'color': color_name, 'position_column': current_position['column'],
+                            'position_row': current_position['row']})
 
     def get_is_ready(self) -> bool:
         return self.ready
