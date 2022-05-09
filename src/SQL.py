@@ -61,9 +61,10 @@ class SQL:
 
         return f"{self.cursor_db.rowcount} record inserted."
 
-    def select_where_from_table(self, table_name, column, statement_value_pairs: dict, single_result=False,
+    def select_where_from_table(self, table_name, columns: list, statement_value_pairs: dict, single_result=False,
                                 result_is_list_in_str_format=False):
-        query = f"SELECT {column} FROM {table_name} WHERE "
+        columns = str(columns).replace("[", "").replace("]", "").replace("'", "")
+        query = f"SELECT {columns} FROM {table_name} WHERE "
 
         for i, (statement, value) in enumerate(statement_value_pairs.items()):
             if i != 0:
