@@ -1,18 +1,24 @@
 from math import cos
 from math import pi
 from math import sin
-
+from src.Helpers import Colors
+from src.SQL import SQL
 import pygame
 
 
 class TargetSpace:
-    symbol: str
-
-    def __init__(self, position: dict, size: dict, color: tuple, symbol: str):
-        self.position = position
-        self.size = size
-        self.color = color
-        self.symbol = symbol
+    def __init__(self, db: SQL, game_id: int, chip_id: int):
+        self.position = {
+            'column': db.select_where_from_table('chips', ['position_column'], {'chip_id': chip_id, 'game_id': game_id},
+                                                 single_result=True),
+            'row': db.select_where_from_table('chips', ['position_row'], {'chip_id': chip_id, 'game_id': game_id},
+                                              single_result=True)}
+        self.size = {'width': 50, 'height': 50}
+        self.color: tuple = Colors.target_space[
+            db.select_where_from_table('chips', ['color'], {'chip_id': chip_id, 'game_id': game_id},
+                                       single_result=True)]
+        self.symbol = db.select_where_from_table('chips', ['symbol'], {'chip_id': chip_id, 'game_id': game_id},
+                                                 single_result=True)
 
     def draw(self, window) -> None:
         if self.symbol == 'circle':
