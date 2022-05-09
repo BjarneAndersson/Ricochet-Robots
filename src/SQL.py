@@ -3,6 +3,10 @@ import os
 import mysql.connector
 
 
+def convert_str_to_list(input_str):  # '[red, green]' -> ['red', 'green']
+    return input_str.replace("[", "").replace("]", "").split(",")
+
+
 class SQL:
     def __init__(self, host_id, user, password):
         self.host_id: str = host_id
@@ -57,24 +61,29 @@ class SQL:
 
         return f"{self.cursor_db.rowcount} record inserted."
 
-    def select_where_from_table(self, table_name, column, statement_value_pairs: dict):
+    def select_where_from_table(self, table_name, column, statement_value_pairs: dict, single_result=False,
+                                result_is_list_in_str_format=False):
         query = f"SELECT {column} FROM {table_name} WHERE "
 
         for i, (statement, value) in enumerate(statement_value_pairs.items()):
             if i != 0:
                 query += ' AND '
-            query += f"{statement} = {value}".replace('\"', '\'')
+            value_for_query = value if type(value) != str else f"'{value}'"
+            query += f"{statement} = {value_for_query}".replace('\"', '\'')
 
         query += ";"
 
         self.cursor_db.execute(query)
 
-        result = self.cursor_db.fetchall()[0][0]
+        result = self.cursor_db.fetchall()
 
-        if type(result) == str and "[" in result:
-            result = result.replace("[", "").replace("]", "").split(",")
-
-        return result
+        if single_result:
+            if result_is_list_in_str_format:
+                return convert_str_to_list(result[0][0])
+            else:
+                return result[0][0]
+        else:
+            return result
 
     def update_where_from_table(self, table_name, statement_value_pair_set: dict, statement_value_pairs_where: dict):
         query = f"UPDATE {table_name} " \
