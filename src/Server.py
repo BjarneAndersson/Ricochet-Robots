@@ -6,6 +6,8 @@ import sys
 from _thread import *
 from datetime import datetime
 
+import pyperclip
+
 os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = "hide"  # hide pycharm import msg
 
 import Game_Objects
@@ -47,7 +49,7 @@ def process_data(data: str):
     return action, path, queries
 
 
-def threaded_client(connection, ip_address, game):
+def threaded_client(connection, address, game):
     global db
     global active_user_count
     global game_id
@@ -125,25 +127,22 @@ def threaded_client(connection, ip_address, game):
 
                     if path[1] == 'new':
                         if action == 'POST':
-                            user_ip_address = f"{ip_address[0]}:{ip_address[1]}"
-                            user_name = queries['name']
-
-                            db.insert_player(str(game_id), user_ip_address, user_name)
+                            db.insert('players', {'game_id': game_id, 'address': f"{address[0]}:{address[1]}",
+                                                  'name': queries['name']})
                             connection.send(str.encode("200"))
                     else:
                         player_id = int(path[1])
 
                         if path[2] == 'name':
                             if action == 'GET':
-                                name = db.select_where_from_table("name", "players", "player_id", player_id)[0][0]
+                                name = db.select_where_from_table("players", "name", {"player_id": player_id})
                                 connection.send(str.encode(str(name)))
                             else:  # action == 'POST'
                                 # game.setUserName(player_id, name)
                                 pass
                         elif path[2] == 'solution':
                             if action == 'GET':
-                                solution = db.select_where_from_table("solution", "players", "player_id", player_id)[0][
-                                    0]
+                                solution = db.select_where_from_table("players", "solution", {"player_id": player_id})
                                 connection.send(str.encode(str(solution)))
                 elif path[0] == 'colors':
                     if action == 'GET' and len(path) == 1:  # 'GET colors'
@@ -151,8 +150,7 @@ def threaded_client(connection, ip_address, game):
                 elif path[0] == 'others':
                     pass
                 else:
-                    pass
-
+                    print(f"Request not implemented: {data}")
         except OSError as socket_error:
             str(socket_error)
             break
@@ -205,5 +203,6 @@ if __name__ == '__main__':
 
     s.listen()
     print(f'Server Started\nIP: {ip_address} | Port: {port}\nWaiting for connections\n')
+    pyperclip.copy(port)
 
     main()
