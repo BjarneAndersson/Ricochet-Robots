@@ -79,7 +79,9 @@ class SQL:
 
         result = self.cursor_db.fetchall()
 
-        if single_result:
+        if len(result) == 0:
+            return None
+        elif single_result:
             if result_is_list_in_str_format:
                 return convert_str_to_list(result[0][0])
             else:
@@ -127,11 +129,12 @@ class SQL:
 
     # ------------------------------------------------------------------------------------------------------------------
     def get_next_id(self, table_name):
-        return self.select_where_from_table('information_schema.TABLES', 'AUTO_INCREMENT',
-                                            {'table_schema': self.db_name, 'table_name': table_name})
+        return self.select_where_from_table('information_schema.TABLES', ['AUTO_INCREMENT'],
+                                            {'table_schema': self.db_name, 'table_name': table_name},
+                                            single_result=True)
 
     def get_all_column_names(self, table_name) -> list:
-        result = self.select_where_from_table('INFORMATION_SCHEMA.COLUMNS', 'COLUMN_NAME', {'TABLE_NAME': table_name})
+        result = self.select_where_from_table('INFORMATION_SCHEMA.COLUMNS', ['COLUMN_NAME'], {'TABLE_NAME': table_name})
         result = [column[0] for column in result]
         return result  # e.g.: ['game_id', 'active_bots', 'created_at']
 
