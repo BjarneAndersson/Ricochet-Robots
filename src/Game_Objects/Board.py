@@ -4,24 +4,27 @@ from .Node import Node
 from .TargetSpace import TargetSpace
 from .Wall import Wall
 
+from src.SQL import SQL
+
 try:
     from src.Helpers import Colors
 except ModuleNotFoundError:
     from Helpers import Colors
+
+db: SQL
+game_id: int
 
 
 class QuarterBoard:
     color: tuple
     field_size: int
 
-    target_spaces: list
     walls: list
 
     def __init__(self, color: tuple, field_size: int):
         self.color = color
         self.field_size = field_size
 
-        self.target_spaces = []
         self.walls = []
 
 
@@ -34,23 +37,17 @@ class QuarterBoardYellow(QuarterBoard):
 
     def create_quarter_board(self):
         # target spaces
-        self.target_spaces.append(
-            TargetSpace({'row': 1, 'column': 6}, {'width': self.field_size, 'height': self.field_size},
-                        Colors.target_space_blue, 'circle'))
-        self.target_spaces.append(
-            TargetSpace({'row': 3, 'column': 1}, {'width': self.field_size, 'height': self.field_size},
-                        Colors.target_space_yellow,
-                        'triangle'))
-        self.target_spaces.append(
-            TargetSpace({'row': 4, 'column': 5}, {'width': self.field_size, 'height': self.field_size},
-                        Colors.target_space_green,
-                        'square'))
-        self.target_spaces.append(
-            TargetSpace({'row': 5, 'column': 2}, {'width': self.field_size, 'height': self.field_size},
-                        Colors.target_space_red, 'hexagon'))
-        self.target_spaces.append(
-            TargetSpace({'row': 5, 'column': 7}, {'width': self.field_size, 'height': self.field_size},
-                        Colors.target_space_all, 'spiral'))
+        db.insert('chips',
+                  {'game_id': game_id, 'color': 'blue', 'symbol': 'circle', 'position_column': 6, 'position_row': 1})
+        db.insert('chips',
+                  {'game_id': game_id, 'color': 'yellow', 'symbol': 'triangle', 'position_column': 1,
+                   'position_row': 3})
+        db.insert('chips',
+                  {'game_id': game_id, 'color': 'green', 'symbol': 'square', 'position_column': 5, 'position_row': 4})
+        db.insert('chips',
+                  {'game_id': game_id, 'color': 'red', 'symbol': 'hexagon', 'position_column': 2, 'position_row': 5})
+        db.insert('chips',
+                  {'game_id': game_id, 'color': 'all', 'symbol': 'spiral', 'position_column': 7, 'position_row': 5})
 
         # walls
         # middle barrier
@@ -99,18 +96,14 @@ class QuarterBoardRed(QuarterBoard):
 
     def create_quarter_board(self):
         # target chips
-        self.target_spaces.append(
-            TargetSpace({'row': 1, 'column': 14}, {'width': self.field_size, 'height': self.field_size},
-                        Colors.target_space_red, 'triangle'))
-        self.target_spaces.append(
-            TargetSpace({'row': 2, 'column': 11}, {'width': self.field_size, 'height': self.field_size},
-                        Colors.target_space_blue, 'hexagon'))
-        self.target_spaces.append(
-            TargetSpace({'row': 6, 'column': 13}, {'width': self.field_size, 'height': self.field_size},
-                        Colors.target_space_green, 'circle'))
-        self.target_spaces.append(
-            TargetSpace({'row': 7, 'column': 10}, {'width': self.field_size, 'height': self.field_size},
-                        Colors.target_space_yellow, 'square'))
+        db.insert('chips',
+                  {'game_id': game_id, 'color': 'red', 'symbol': 'triangle', 'position_column': 14, 'position_row': 1})
+        db.insert('chips',
+                  {'game_id': game_id, 'color': 'blue', 'symbol': 'hexagon', 'position_column': 11, 'position_row': 2})
+        db.insert('chips',
+                  {'game_id': game_id, 'color': 'green', 'symbol': 'circle', 'position_column': 13, 'position_row': 6})
+        db.insert('chips',
+                  {'game_id': game_id, 'color': 'yellow', 'symbol': 'square', 'position_column': 10, 'position_row': 7})
 
         # walls
         # middle barrier
@@ -154,18 +147,15 @@ class QuarterBoardGreen(QuarterBoard):
 
     def create_quarter_board(self):
         # target chips
-        self.target_spaces.append(
-            TargetSpace({'row': 9, 'column': 3}, {'width': self.field_size, 'height': self.field_size},
-                        Colors.target_space_yellow, 'hexagon'))
-        self.target_spaces.append(
-            TargetSpace({'row': 11, 'column': 1}, {'width': self.field_size, 'height': self.field_size},
-                        Colors.target_space_red, 'circle'))
-        self.target_spaces.append(
-            TargetSpace({'row': 12, 'column': 6}, {'width': self.field_size, 'height': self.field_size},
-                        Colors.target_space_blue, 'square'))
-        self.target_spaces.append(
-            TargetSpace({'row': 14, 'column': 2}, {'width': self.field_size, 'height': self.field_size},
-                        Colors.target_space_green, 'triangle'))
+        db.insert('chips',
+                  {'game_id': game_id, 'color': 'yellow', 'symbol': 'hexagon', 'position_column': 3, 'position_row': 9})
+        db.insert('chips',
+                  {'game_id': game_id, 'color': 'red', 'symbol': 'circle', 'position_column': 1, 'position_row': 11})
+        db.insert('chips',
+                  {'game_id': game_id, 'color': 'blue', 'symbol': 'square', 'position_column': 6, 'position_row': 12})
+        db.insert('chips',
+                  {'game_id': game_id, 'color': 'green', 'symbol': 'triangle', 'position_column': 2,
+                   'position_row': 14})
 
         # walls
         # middle barrier
@@ -209,18 +199,15 @@ class QuarterBoardBlue(QuarterBoard):
 
     def create_quarter_board(self):
         # target chips
-        self.target_spaces.append(
-            TargetSpace({'row': 9, 'column': 13}, {'width': self.field_size, 'height': self.field_size},
-                        Colors.target_space_blue, 'triangle'))
-        self.target_spaces.append(
-            TargetSpace({'row': 11, 'column': 9}, {'width': self.field_size, 'height': self.field_size},
-                        Colors.target_space_yellow, 'circle'))
-        self.target_spaces.append(
-            TargetSpace({'row': 13, 'column': 14}, {'width': self.field_size, 'height': self.field_size},
-                        Colors.target_space_red, 'square'))
-        self.target_spaces.append(
-            TargetSpace({'row': 14, 'column': 10}, {'width': self.field_size, 'height': self.field_size},
-                        Colors.target_space_green, 'hexagon'))
+        db.insert('chips',
+                  {'game_id': game_id, 'color': 'blue', 'symbol': 'triangle', 'position_column': 13, 'position_row': 9})
+        db.insert('chips',
+                  {'game_id': game_id, 'color': 'yellow', 'symbol': 'circle', 'position_column': 9, 'position_row': 11})
+        db.insert('chips',
+                  {'game_id': game_id, 'color': 'red', 'symbol': 'square', 'position_column': 14, 'position_row': 13})
+        db.insert('chips',
+                  {'game_id': game_id, 'color': 'green', 'symbol': 'hexagon', 'position_column': 10,
+                   'position_row': 14})
 
         # walls
         # middle barrier
@@ -260,19 +247,32 @@ class Board:
 
     board: dict
 
-    def __init__(self, total_rows, total_columns, position, qube_size):
+    def __init__(self, _db, _game_id, position, field_size):
+        global db, game_id
+        db = _db
+        game_id = _game_id
+
         self.grid = None
-        self.total_rows = total_rows
-        self.total_columns = total_columns
-        self.field_size = qube_size
+        self.total_rows = 16
+        self.total_columns = 16
+        self.field_size = field_size
 
         self.board = dict()
         self.position: dict = position
         self.size = {'width': self.total_rows * self.field_size, 'height': self.total_columns * self.field_size}
         self.rect = pygame.rect.Rect(self.position['x'], self.position['y'], self.size['width'], self.size['height'])
 
+        self.targets = []
+
         self.create_board()
         self.create_grid()
+
+    def create_board(self) -> dict:
+        self.board = {'yellow': QuarterBoardYellow(self.field_size),
+                      'red': QuarterBoardRed(self.field_size),
+                      'green': QuarterBoardGreen(self.field_size),
+                      'blue': QuarterBoardBlue(self.field_size)}
+        return self.board
 
     def create_grid(self) -> list:
         self.grid = [[Node(
@@ -288,6 +288,7 @@ class Board:
                 node.set_neighbors(self.grid)
 
         self.add_walls_to_grid()
+        self.create_targets()
         self.add_target_spaces_to_grid()
         return self.grid
 
@@ -297,17 +298,24 @@ class Board:
                 self.grid[wall.position_node1['row']][wall.position_node1['column']].set_wall(wall.direction_node1)
                 self.grid[wall.position_node2['row']][wall.position_node2['column']].set_wall(wall.direction_node2)
 
-    def add_target_spaces_to_grid(self) -> None:
-        for quarter_board in self.board.values():
-            for target_space in quarter_board.target_spaces:
-                self.grid[target_space.position['row']][target_space.position['column']].set_target_space(target_space)
+    def create_targets(self) -> None:
+        chip_ids = db.select_where_from_table('chips', ['chip_id'], {'game_id': game_id})
+        chip_ids = [chip_id[0] for chip_id in chip_ids]
+        for chip_id in chip_ids:
+            self.targets.append(TargetSpace(db, game_id, chip_id, {}))
+        print(self.targets)
 
-    def create_board(self) -> dict:
-        self.board = {'yellow': QuarterBoardYellow(self.field_size),
-                      'red': QuarterBoardRed(self.field_size),
-                      'green': QuarterBoardGreen(self.field_size),
-                      'blue': QuarterBoardBlue(self.field_size)}
-        return self.board
+    def add_target_spaces_to_grid(self) -> None:
+        colors_and_symbols_all_target_spaces = db.select_where_from_table('chips', ['color', 'symbol'],
+                                                                          {'game_id': game_id})
+        for color_name, symbol in colors_and_symbols_all_target_spaces:
+            for target in self.targets:
+                if color_name == target.color_name and symbol == target.symbol:
+                    coord = db.select_where_from_table('chips', ['position_column', 'position_row'],
+                                                       {'game_id': game_id, 'chip_id': target.chip_id})[0]
+                    self.grid[coord[1]][coord[0]].set_target_space(target)
+
+
 
     def get_node(self, position: dict) -> Node:
         x, y = position['x'], position['y']
