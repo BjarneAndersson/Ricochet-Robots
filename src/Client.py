@@ -132,6 +132,8 @@ def main():
     # player_name = input('Please enter your name: ')
     player_name = 'Bjarne'
     network = Network(server["ip"], server["port"])
+    print("Connected to server!")
+
     player_id = network.get_player_id()
     network.send(f"POST user/new?name={player_name}")
 
@@ -167,6 +169,7 @@ def main():
         raise RuntimeError("Game crashed")
     finally:
         pygame.quit()
+        print("Connection lost")
 
 
 if __name__ == '__main__':
