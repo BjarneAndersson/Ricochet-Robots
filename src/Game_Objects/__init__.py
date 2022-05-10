@@ -5,5 +5,5 @@ from .Menu import Menu
 from .Menu import MenuButton
 from .Node import Node
 from .Robot import Robot
-from .Target import TargetSpace
+from .Target import Target
 from .Wall import Wall
