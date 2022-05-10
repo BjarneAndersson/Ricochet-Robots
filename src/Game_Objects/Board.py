@@ -31,7 +31,7 @@ class QuarterBoard:
 class QuarterBoardYellow(QuarterBoard):
 
     def __init__(self, field_size: int):
-        super().__init__(Colors.board_yellow, field_size)
+        super().__init__(Colors.board['yellow'], field_size)
 
         self.create_quarter_board()
 
@@ -90,7 +90,7 @@ class QuarterBoardYellow(QuarterBoard):
 class QuarterBoardRed(QuarterBoard):
 
     def __init__(self, field_size: int):
-        super().__init__(Colors.board_red, field_size)
+        super().__init__(Colors.board['red'], field_size)
 
         self.create_quarter_board()
 
@@ -141,7 +141,7 @@ class QuarterBoardRed(QuarterBoard):
 class QuarterBoardGreen(QuarterBoard):
 
     def __init__(self, field_size: int):
-        super().__init__(Colors.board_green, field_size)
+        super().__init__(Colors.board['green'], field_size)
 
         self.create_quarter_board()
 
@@ -193,7 +193,7 @@ class QuarterBoardGreen(QuarterBoard):
 class QuarterBoardBlue(QuarterBoard):
 
     def __init__(self, field_size: int):
-        super().__init__(Colors.board_blue, field_size)
+        super().__init__(Colors.board['blue'], field_size)
 
         self.create_quarter_board()
 
