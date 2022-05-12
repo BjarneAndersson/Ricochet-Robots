@@ -11,3 +11,6 @@ class Button:
 
     def change_state(self):
         self.pressed = not self.pressed
+
+    def set_state(self, state):
+        self.pressed = state

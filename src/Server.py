@@ -81,6 +81,9 @@ def threaded_client(connection, address, game):
                             elif path[2] == 'offset':
                                 if action == 'GET':  # 'GET game/board/offset'
                                     connection.sendall(pickle.dumps(game.board_offset))
+                            elif path[2] == 'rect':  # 'GET game/board/rect'
+                                if action == 'GET':
+                                    connection.sendall(pickle.dumps(game.board.rect))
                             if len(queries) != 0:
                                 if queries['position'] == 'center':  # 'GET game/board?&position=center'
                                     connection.sendall(pickle.dumps(
@@ -110,15 +113,26 @@ def threaded_client(connection, address, game):
                                     connection.sendall(pickle.dumps(game.menu.button))
 
                         elif path[1] == 'individual_solution':
-                            if action == 'GET' and len(path) == 2:  # 'GET game/individual_solution'
-                                connection.sendall(pickle.dumps(game.individual_solution))
-
-                            elif path[2] == 'position':  # 'GET game/individual_solution/position'
+                            if path[2] == 'position':  # 'GET game/individual_solution/position'
                                 if action == 'GET' and len(path) == 3:
                                     connection.sendall(pickle.dumps(game.individual_solution.position))
                             elif path[2] == 'size':  # 'GET game/individual_solution/size'
                                 if action == 'GET':
                                     connection.sendall(pickle.dumps(game.individual_solution.size))
+
+                        elif path[1] == 'ready_button':
+                            if path[2] == 'state':  # 'GET game/ready_button/state'
+                                if action == 'GET' and len(path) == 3:
+                                    if game.is_round_active:
+                                        connection.send('pressed'.encode())
+                                    else:
+                                        connection.send('unpressed'.encode())
+                            elif path[2] == 'position':  # 'GET game/ready_button/position'
+                                if action == 'GET' and len(path) == 3:
+                                    connection.sendall(pickle.dumps(game.ready_button['position']))
+                            elif path[2] == 'size':  # 'GET game/ready_button/size'
+                                if action == 'GET':
+                                    connection.sendall(pickle.dumps(game.ready_button['size']))
 
                         elif path[1] == 'window_dimensions':
                             if action == 'GET':
@@ -151,6 +165,27 @@ def threaded_client(connection, address, game):
                                 solution = db.select_where_from_table("players", ["solution"], {"player_id": player_id},
                                                                       single_result=True)
                                 connection.send(str.encode(str(solution)))
+                        elif path[2] == 'change_status_next_round':  # "POST user/{id}/change_status_next_round"
+                            if action == 'POST':
+                                if not game.is_round_active:
+                                    old_status = bool(db.select_where_from_table('players', ['ready_for_round'],
+                                                                                 {'player_id': player_id},
+                                                                                 single_result=True))
+                                    new_status = not old_status
+                                    if new_status:  # player wasn't ready
+                                        db.update_where_from_table('players', {'ready_for_round': 1},
+                                                                   {'player_id': player_id})
+                                        game.player_count_ready_for_round += 1
+                                        if game.get_is_round_ready():
+                                            game.start_round()
+                                    else:
+                                        db.update_where_from_table('players', {'ready_for_round': 0},
+                                                                   {'player_id': player_id})
+                                        game.player_count_ready_for_round -= 1
+                                else:
+                                    new_status = True
+                                connection.send(pickle.dumps(new_status))
+
                 elif path[0] == 'colors':
                     if action == 'GET' and len(path) == 1:  # 'GET colors'
                         connection.sendall(pickle.dumps(Colors))

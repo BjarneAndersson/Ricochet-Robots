@@ -40,4 +40,9 @@ class Colors:
         'blue': blue
     }
 
+    ready_button = {
+        'pressed': red,
+        'unpressed': green
+    }
+
     background = dark_grey

@@ -8,7 +8,9 @@ from Game_Objects import Hourglass
 from Game_Objects import IndividualSolution
 from Game_Objects import Menu
 from Game_Objects import MenuButton
+from Game_Objects import ReadyButton
 from Game_Objects import Robot
+
 from SQL import SQL
 
 
@@ -20,10 +22,13 @@ class Game:
     def __init__(self, db, game_id):
         self.db: SQL = db
         self.game_id: int = game_id
-        self.round_id: int = self.db.get_next_id('rounds')
+        self.round_id: int
+        self.round_number: int = 0
 
         self.robots = []
         self.ready: bool = False
+        self.is_round_active: bool = False
+        self.player_count_ready_for_round = 0
 
         width_menu_hourglass: int = 1 * self.FIELD_SIZE
         width_leaderboard: int = 4 * self.FIELD_SIZE
@@ -49,9 +54,14 @@ class Game:
                                         'height'] + 3 * self.FIELD_SIZE},
                                    {'width': self.FIELD_SIZE, 'height': 12 * self.FIELD_SIZE})
         self.individual_solution = IndividualSolution(
-            {'x': self.FIELD_SIZE // 2,
+            {'x': self.FIELD_SIZE,
              'y': self.board_offset['top'] + self.board.size['height'] + self.FIELD_SIZE // 2},
-            {'width': 4 * self.FIELD_SIZE, 'height': 3 * self.FIELD_SIZE})
+            {'width': 5 * self.FIELD_SIZE, 'height': height_start_input})
+
+        self.ready_button = {
+            'position': {'x': self.board_offset['left'] + self.individual_solution.size['width'] + self.FIELD_SIZE // 2,
+                         'y': self.board_offset['top'] + self.board.size['height'] + self.FIELD_SIZE // 2},
+            'size': {'width': 5 * self.FIELD_SIZE, 'height': height_start_input}}
 
         self.create_robots()
 
@@ -98,6 +108,46 @@ class Game:
     def get_is_ready(self) -> bool:
         return self.ready
 
+    def get_is_round_ready(self) -> bool:
+        return self.player_count_ready_for_round >= self.db.select_where_from_table('games', ['player_count'],
+                                                                                    {'game_id': self.game_id},
+                                                                                    single_result=True) // 2
+
+    def get_new_round_number(self):
+        self.round_number += 1
+        return self.round_number
+
+    def choose_rand_chip(self) -> int:  # return chip_id
+        all_available_chip_ids = [chip_id_tpl[0] for chip_id_tpl in
+                                  self.db.select_where_from_table('chips', ['chip_id'], {'game_id': self.game_id,
+                                                                                         'obtained_by_player_id': 0})]
+        return random.choice(all_available_chip_ids)
+
+    def reset_all_player_solutions(self) -> None:
+        self.db.update_where_from_table('players', {'solution': -1}, {'game_id': self.game_id})
+
+    def start_round(self):
+        self.is_round_active = True
+        self.db.insert('rounds', {'game_id': self.game_id, 'round_number': self.get_new_round_number(),
+                                  'chip_id': self.choose_rand_chip()})
+        self.round_id = self.db.select_where_from_table('rounds', ['round_id'],
+                                                        {'game_id': self.game_id, 'round_number': self.round_number},
+                                                        single_result=True)
+
+        self.reset_all_player_solutions()
+
+        chip_id = self.db.select_where_from_table('rounds', ['chip_id'], {'round_id': self.round_id},
+                                                  single_result=True)
+        self.db.update_where_from_table('chips', {'revealed': 1}, {'chip_id': chip_id})
+
+    def get_best_player_id(self) -> int:  # solution >= 0 => valid | solution < 0 => invalid
+        best_player_id = self.db.select_where_from_table('player_id', 'players', 'solution',
+                                                         '(SELECT MIN(solution) FROM players)', 'last_solution_change',
+                                                         '(SELECT MIN(last_change) FROM players)', 'game_id',
+                                                         self.game_id)
+
+        return best_player_id
+
     def control_move_count_gt_player_solution(self):
         self.selected_robot.border = False
         self.selected_robot.current_node.robot = None
@@ -114,22 +164,9 @@ class Game:
         else:
             print('No one found a valid solution!\nSkipping target chip!')
 
-    def start_round(self):
-        self.round_id = self.db.get_next_id('rounds')
-        self.db.insert_round(str(self.game_id), self.selected_chip)
-
-        for player in self.players:
-            player.solution = -1
-
-    def get_best_player_id(self) -> int:  # solution >= 0 => valid | solution < 0 => invalid
-        best_player_id = self.db.select_where_from_table('player_id', 'players', 'solution',
-                                                         '(SELECT MIN(solution) FROM players)', 'last_solution_change',
-                                                         '(SELECT MIN(last_change) FROM players)', 'game_id',
-                                                         self.game_id)
-
-        return best_player_id
-
     def finish_round(self):
+        self.is_round_active = False
+
         self.selected_chip.is_revealed = False
 
         # get all player_ids that are in the game
@@ -165,3 +202,5 @@ class Game:
         for player in self.players:
             print(f"Player: {player.name} | Score: {len(player.target_chips)}")
         print('')
+
+        self.player_count_ready_for_round = 0
