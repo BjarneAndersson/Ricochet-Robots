@@ -6,17 +6,17 @@ from src.SQL import SQL
 import pygame
 
 
-class Target:
-    def __init__(self, db: SQL, game_id: int, chip_id: int, position_grid_center: dict):
-        self.chip_id = chip_id
-        self.color_name = db.select_where_from_table('chips', ['color_name'], {'chip_id': chip_id, 'game_id': game_id},
-                                                     single_result=True)
-        self.color: tuple = Colors.target[self.color_name]
-        self.symbol = db.select_where_from_table('chips', ['symbol'], {'chip_id': chip_id, 'game_id': game_id},
-                                                 single_result=True)
+class TargetDraw:
+    def __init__(self, color: tuple, symbol: str, position: dict, position_grid_center: dict, size: dict,
+                 is_revealed: bool):
+        self.color = color
+        self.symbol = symbol
+        self.position = position
         self.position_grid_center = position_grid_center
+        self.size = size
+        self.is_revealed = is_revealed
 
-    def draw(self, window, position, size) -> None:
+    def r_draw(self, window, position, size):
         if self.symbol == 'circle':
             pygame.draw.circle(window, self.color,
                                (position['x'] + size['width'] // 2,
@@ -43,7 +43,7 @@ class Target:
                 pts.append([int(x), int(y)])
             pygame.draw.polygon(window, self.color, pts)
 
-        elif self.symbol == 'spiral':
+        elif self.symbol == 'spiral':  # temporarily drawing a X
             pygame.draw.line(window, self.color,
                              (position['x'], position['y']),
                              (position['x'] + size['width'], position['y'] + size['height']),
@@ -53,6 +53,39 @@ class Target:
                              (position['x'], position['y'] + size['height']),
                              width=3)
 
+    def draw(self, window) -> None:
+        self.r_draw(window, self.position, self.size)
+
+        if self.is_revealed:
+            size_for_draw_center = self.size.copy()
+            size_for_draw_center['width'] *= 2
+            size_for_draw_center['height'] *= 2
+            self.draw_to_grid_center(window, size_for_draw_center)
+
     def draw_to_grid_center(self, window, size):
-        self.draw(window, {'x': self.position_grid_center['x'] - size['width'] // 2,
-                           'y': self.position_grid_center['y'] - size['height'] // 2}, size)
+        self.r_draw(window, {'x': self.position_grid_center['x'] - size['width'] // 2,
+                             'y': self.position_grid_center['y'] - size['height'] // 2}, size)
+
+
+class Target:
+    def __init__(self, db: SQL, game_id: int, chip_id: int, node, position_grid_center: dict):
+        self.db = db
+        self.chip_id = chip_id
+        self.color_name = db.select_where_from_table('chips', ['color_name'],
+                                                     {'chip_id': self.chip_id, 'game_id': game_id},
+                                                     single_result=True)
+        self.color: tuple = Colors.target[self.color_name]
+        self.symbol = db.select_where_from_table('chips', ['symbol'], {'chip_id': self.chip_id, 'game_id': game_id},
+                                                 single_result=True)
+        self.node = node
+        self.position = self.node.get_position()
+        self.size = node.get_size()
+        self.position_grid_center = position_grid_center
+
+    def create_obj_for_draw(self):
+        is_revealed = bool(self.db.select_where_from_table('chips', ['revealed'], {'chip_id': self.chip_id},
+                                                           single_result=True))
+
+        obj_target_draw = TargetDraw(self.color, self.symbol, self.position, self.position_grid_center, self.size,
+                                     is_revealed)
+        return obj_target_draw

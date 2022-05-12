@@ -303,7 +303,6 @@ class Board:
 
         self.add_walls_to_grid()
         self.create_targets()
-        self.add_targets_to_grid()
         return self.grid
 
     def add_walls_to_grid(self) -> None:
@@ -316,20 +315,11 @@ class Board:
         chip_ids = db.select_where_from_table('chips', ['chip_id'], {'game_id': game_id})
         chip_ids = [chip_id[0] for chip_id in chip_ids]
         for chip_id in chip_ids:
-            self.targets.append(Target(db, game_id, chip_id, {}))
-        print(self.targets)
-
-    def add_targets_to_grid(self) -> None:
-        colors_and_symbols_all_targets = db.select_where_from_table('chips', ['color_name', 'symbol'],
-                                                                    {'game_id': game_id})
-        for color_name, symbol in colors_and_symbols_all_targets:
-            for target in self.targets:
-                if color_name == target.color_name and symbol == target.symbol:
-                    coord = db.select_where_from_table('chips', ['position_column', 'position_row'],
-                                                       {'game_id': game_id, 'chip_id': target.chip_id})[0]
-                    self.grid[coord[1]][coord[0]].set_target(target)
-
-
+            target_position = \
+            db.select_where_from_table('chips', ['position_column', 'position_row'], {'chip_id': chip_id})[0]
+            target_position = {'column': target_position[0], 'row': target_position[1]}
+            node = self.grid[target_position['row']][target_position['column']]
+            self.targets.append(Target(db, game_id, chip_id, node, self.get_position_grid_center()))
 
     def get_node(self, position: dict) -> Node:
         x, y = position['x'], position['y']
@@ -340,3 +330,6 @@ class Board:
         column = x // self.field_size
 
         return self.grid[row][column]
+
+    def get_position_grid_center(self) -> dict:
+        return {'x': self.rect.centerx, 'y': self.rect.centery}
