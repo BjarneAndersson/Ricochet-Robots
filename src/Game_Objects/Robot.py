@@ -1,6 +1,7 @@
 import pygame
 
 from .Node import Node
+from src.SQL import SQL
 
 try:
     from src.Helpers import Colors
@@ -9,36 +10,14 @@ except ModuleNotFoundError:
 
 
 class Robot:
-    home_node: Node
-    current_node: Node
-    border: bool
-
-    def __init__(self, grid, position: dict, size: dict, name: str):
-        self.position = position
-        self.size = size
-        self.name = name
-        self.color = self.get_color()
-
-        self.home_node = grid[self.position['row']][self.position['column']]
-        self.current_node = self.home_node
-
-        self.current_node.robot = self
-
-        self.border = False
-
-    def get_color(self) -> tuple:
-        if self.name.lower() == 'yellow':
-            return Colors.yellow
-        elif self.name.lower() == 'red':
-            return Colors.red
-        elif self.name.lower() == 'green':
-            return Colors.green
-        elif self.name.lower() == 'blue':
-            return Colors.blue
+    def __init__(self, db, game_id, robot_id, field_size, current_node):
+        self.db: SQL = db
+        self.game_id = game_id
+        self.robot_id = robot_id
+        self.field_size = field_size
+        self.current_node = current_node
 
     def move(self, direction: str) -> None:
-        self.current_node.robot = None
-
         if direction == 'up':
             while self.current_node.neighbors['up'] and not self.current_node.neighbors['up'].is_robot():
                 self.current_node = self.current_node.neighbors['up']
@@ -52,9 +31,29 @@ class Robot:
             while self.current_node.neighbors['right'] and not self.current_node.neighbors['right'].is_robot():
                 self.current_node = self.current_node.neighbors['right']
 
-        self.current_node.robot = self
+        self.db.update_where_from_table('robots', {'position_column': self.current_node.get_position()['column']},
+                                        {'robot_id': self.robot_id})
+        self.db.update_where_from_table('robots', {'position_row': self.current_node.get_position()['row']},
+                                        {'robot_id': self.robot_id})
 
-        self.position = self.current_node.get_position()
+    def create_obj_for_draw(self):
+        color = Colors.robot[self.db.select_where_from_table('robots', ['color_name'],
+                                                             {'game_id': self.game_id, 'robot_id': self.robot_id},
+                                                             single_result=True)]
+        position = self.current_node.get_position()
+        is_in_use = bool(
+            self.db.select_where_from_table('robots', ['in_use'], {'game_id': self.game_id, 'robot_id': self.robot_id},
+                                            single_result=True))
+        obj_robot_draw = RobotDraw(color, position, {'width': self.field_size, 'height': self.field_size}, is_in_use)
+        return obj_robot_draw
+
+
+class RobotDraw:
+    def __init__(self, color, position, size, active):
+        self.color: tuple = color
+        self.position: dict = position
+        self.size: dict = size
+        self.active: bool = active
 
     def draw(self, window) -> None:
         pygame.draw.circle(window, self.color,
@@ -62,7 +61,7 @@ class Robot:
                                self.position['x'] + self.size['width'] // 2,
                                self.position['y'] + self.size['height'] // 2),
                            self.size['width'] // 2 - 3)
-        if self.border:
+        if self.active:
             pygame.draw.circle(window, Colors.white,
                                (self.position['x'] + self.size['width'] // 2,
                                 self.position['y'] + self.size['height'] // 2),

@@ -77,11 +77,23 @@ class Game:
             used_positions.append(current_position)
 
             self.db.insert('robots',
-                           {'game_id': self.game_id, 'color': color_name, 'position_column': current_position['column'],
-                            'position_row': current_position['row']})
+                           {'game_id': self.game_id, 'color_name': color_name,
+                            'home_position_column': current_position['column'],
+                            'home_position_row': current_position['row'],
+                            'position_column': current_position['column'], 'position_row': current_position['row']})
+
+            robot_id = self.db.select_where_from_table('robots', ['robot_id'],
+                                                       {'game_id': self.game_id, 'color_name': color_name,
+                                                        'position_column': current_position['column'],
+                                                        'position_row': current_position['row']}, single_result=True)
+
+            robot_position = self.db.select_where_from_table('robots', ['position_column', 'position_row'],
+                                                             {'game_id': self.game_id, 'robot_id': robot_id})[0]
+            robot_position = {'column': robot_position[0], 'row': robot_position[1]}
 
             self.robots.append(
-                Robot(current_position, {'width': self.FIELD_SIZE, 'height': self.FIELD_SIZE}, color_name))
+                Robot(self.db, self.game_id, robot_id, self.FIELD_SIZE,
+                      self.board.grid[robot_position['row']][robot_position['column']]))
 
     def get_is_ready(self) -> bool:
         return self.ready

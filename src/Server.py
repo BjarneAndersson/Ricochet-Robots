@@ -88,7 +88,8 @@ def threaded_client(connection, address, game):
 
                         elif path[1] == 'robots':
                             if action == 'GET':  # 'GET game/robots'
-                                connection.sendall(pickle.dumps(game.robots))
+                                x = [robot.create_obj_for_draw() for robot in game.robots]
+                                connection.sendall(pickle.dumps(x))
 
                         elif path[1] == 'target_chips':
                             if path[2] == 'selected':
