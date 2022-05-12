@@ -17,7 +17,7 @@ from Helpers import Colors
 from SQL import SQL
 
 db: SQL
-active_user_count: int = 0
+active_player_count: int = 0
 game_id: int
 
 
@@ -52,11 +52,13 @@ def process_data(data: str):
 
 def threaded_client(connection, address, game):
     global db
-    global active_user_count
+    global active_player_count
     global game_id
 
     player_id = db.get_next_id('players')
     connection.send(str.encode(str(player_id)))  # send the client the player_id
+
+    db.update_where_from_table('games', {'player_count': active_player_count}, {'game_id': game_id})
 
     while True:
         try:
@@ -153,7 +155,8 @@ def threaded_client(connection, address, game):
                     if action == 'GET' and len(path) == 1:  # 'GET colors'
                         connection.sendall(pickle.dumps(Colors))
                 elif path[0] == 'others':
-                    pass
+                    if path[1] == 'duration':
+                        pass  # calculate and update duration in db
                 else:
                     print(f"Request not implemented: {data}")
         except OSError as socket_error:
@@ -162,12 +165,13 @@ def threaded_client(connection, address, game):
 
     print('Lost connection')
     connection.close()
-    active_user_count -= 1
+    active_player_count -= 1
+    db.update_where_from_table('games', {'player_count': active_player_count}, {'game_id': game_id})
 
 
 def main():
     global db
-    global active_user_count
+    global active_player_count
     global game_id
 
     db = SQL("localhost", "root", "")
@@ -182,7 +186,7 @@ def main():
         connection, address = s.accept()
         print('Connected to: ', address)
 
-        if active_user_count >= 2:
+        if active_player_count >= 2:
             if not game.ready:
                 print('Ready to play')
             game.ready = True
@@ -191,7 +195,7 @@ def main():
 
         start_new_thread(threaded_client, (connection, address, game))
 
-        active_user_count += 1
+        active_player_count += 1
 
 
 if __name__ == '__main__':
