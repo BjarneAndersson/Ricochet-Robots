@@ -67,11 +67,11 @@ def draw_grid() -> None:
     board_offset = network.send("GET game/board/offset")
     field_size = network.send("GET game/field_size")
 
-    for i in range(17):
+    for i in range(16 + 1):
         pygame.draw.line(window, Colors.wall,
                          (0 + board_offset['left'], i * field_size + board_offset['top']),
                          (16 * field_size + board_offset['left'], i * field_size + board_offset['top']))
-        for j in range(17):
+        for j in range(16 + 1):
             pygame.draw.line(window, Colors.wall,
                              (i * field_size + board_offset['left'], 0 + board_offset['top']),
                              (i * field_size + board_offset['left'],
@@ -128,8 +128,6 @@ def convert_pygame_key_to_direction_str(key) -> str:
 def main():
     global window, network, server, colors, player_id, input_field, font
 
-    # player_name = input('Please enter your name: ')
-    player_name = 'Bjarne'
     network = Network(server["ip"], server["port"])
     print("Connected to server!")
 
@@ -140,11 +138,7 @@ def main():
 
     run: bool = True
 
-    try:
-        colors = network.send('GET colors')
-    except:
-        run = False
-        print("Could not get data from the server")
+    colors = network.send('GET colors')
 
     input_field = Input_Field(network.send("GET game/individual_solution/position"),
                               network.send("GET game/individual_solution/size"))
@@ -176,5 +170,8 @@ if __name__ == '__main__':
     port_server = int(input("Port of the server: "))
     server: dict = {"ip": "192.168.1.113",
                     "port": port_server}
+
+    # player_name = input('Please enter your name: ')
+    player_name = 'Bjarne'
 
     main()
