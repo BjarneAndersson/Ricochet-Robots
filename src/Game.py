@@ -53,7 +53,7 @@ class Game:
              'y': self.board_offset['top'] + self.board.size['height'] + self.FIELD_SIZE // 2},
             {'width': 4 * self.FIELD_SIZE, 'height': 3 * self.FIELD_SIZE})
 
-        self.make_robots()
+        self.create_robots()
 
         # window initialisation
         self.window_dimensions = (
@@ -64,7 +64,7 @@ class Game:
 
         self.control_move_count: int = 0
 
-    def make_robots(self) -> None:
+    def create_robots(self) -> None:
         used_positions: list = [{'row': 7, 'column': 7}, {'row': 7, 'column': 8}, {'row': 8, 'column': 7},
                                 {'row': 8, 'column': 8}]
         for color_name in ['red', 'green', 'blue', 'yellow']:
@@ -79,6 +79,9 @@ class Game:
             self.db.insert('robots',
                            {'game_id': self.game_id, 'color': color_name, 'position_column': current_position['column'],
                             'position_row': current_position['row']})
+
+            self.robots.append(
+                Robot(current_position, {'width': self.FIELD_SIZE, 'height': self.FIELD_SIZE}, color_name))
 
     def get_is_ready(self) -> bool:
         return self.ready
