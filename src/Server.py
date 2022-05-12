@@ -6,6 +6,7 @@ import sys
 from _thread import *
 from datetime import datetime
 
+import nodeenv
 import pyperclip
 
 os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = "hide"  # hide pycharm import msg
@@ -73,7 +74,8 @@ def threaded_client(connection, address, game):
                         if path[1] == 'board':
                             if path[2] == 'grid':
                                 if action == 'GET':  # 'GET game/board/grid'
-                                    connection.sendall(pickle.dumps(game.board.grid))
+                                    x = [[node.create_obj_for_draw() for node in row] for row in game.board.grid]
+                                    connection.sendall(pickle.dumps(x))
                             elif path[2] == 'offset':
                                 if action == 'GET':  # 'GET game/board/offset'
                                     connection.sendall(pickle.dumps(game.board_offset))
