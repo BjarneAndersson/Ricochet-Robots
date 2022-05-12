@@ -138,13 +138,10 @@ class SQL:
         result = [column[0] for column in result]
         return result  # e.g.: ['game_id', 'active_bots', 'created_at']
 
-    def clear_temporary_tables(self):
-        self.clear_table('players')
-        self.clear_table('rounds')
-
-    def clear_all_tables(self):
-        self.clear_table('games')
-        self.clear_temporary_tables()
+    def clear_temporary_tables(self, game_id: int):
+        self.delete_where_from_table('players', {'game_id': game_id})
+        self.delete_where_from_table('chips', {'game_id': game_id})
+        self.delete_where_from_table('rounds', {'game_id': game_id})
 
 
 if __name__ == '__main__':
