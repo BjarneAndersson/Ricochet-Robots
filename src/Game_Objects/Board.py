@@ -38,16 +38,20 @@ class QuarterBoardYellow(QuarterBoard):
     def create_quarter_board(self):
         # target spaces
         db.insert('chips',
-                  {'game_id': game_id, 'color': 'blue', 'symbol': 'circle', 'position_column': 6, 'position_row': 1})
+                  {'game_id': game_id, 'color_name': 'blue', 'symbol': 'circle', 'position_column': 6,
+                   'position_row': 1})
         db.insert('chips',
-                  {'game_id': game_id, 'color': 'yellow', 'symbol': 'triangle', 'position_column': 1,
+                  {'game_id': game_id, 'color_name': 'yellow', 'symbol': 'triangle', 'position_column': 1,
                    'position_row': 3})
         db.insert('chips',
-                  {'game_id': game_id, 'color': 'green', 'symbol': 'square', 'position_column': 5, 'position_row': 4})
+                  {'game_id': game_id, 'color_name': 'green', 'symbol': 'square', 'position_column': 5,
+                   'position_row': 4})
         db.insert('chips',
-                  {'game_id': game_id, 'color': 'red', 'symbol': 'hexagon', 'position_column': 2, 'position_row': 5})
+                  {'game_id': game_id, 'color_name': 'red', 'symbol': 'hexagon', 'position_column': 2,
+                   'position_row': 5})
         db.insert('chips',
-                  {'game_id': game_id, 'color': 'all', 'symbol': 'spiral', 'position_column': 7, 'position_row': 5})
+                  {'game_id': game_id, 'color_name': 'all', 'symbol': 'spiral', 'position_column': 7,
+                   'position_row': 5})
 
         # walls
         # middle barrier
@@ -97,13 +101,17 @@ class QuarterBoardRed(QuarterBoard):
     def create_quarter_board(self):
         # target chips
         db.insert('chips',
-                  {'game_id': game_id, 'color': 'red', 'symbol': 'triangle', 'position_column': 14, 'position_row': 1})
+                  {'game_id': game_id, 'color_name': 'red', 'symbol': 'triangle', 'position_column': 14,
+                   'position_row': 1})
         db.insert('chips',
-                  {'game_id': game_id, 'color': 'blue', 'symbol': 'hexagon', 'position_column': 11, 'position_row': 2})
+                  {'game_id': game_id, 'color_name': 'blue', 'symbol': 'hexagon', 'position_column': 11,
+                   'position_row': 2})
         db.insert('chips',
-                  {'game_id': game_id, 'color': 'green', 'symbol': 'circle', 'position_column': 13, 'position_row': 6})
+                  {'game_id': game_id, 'color_name': 'green', 'symbol': 'circle', 'position_column': 13,
+                   'position_row': 6})
         db.insert('chips',
-                  {'game_id': game_id, 'color': 'yellow', 'symbol': 'square', 'position_column': 10, 'position_row': 7})
+                  {'game_id': game_id, 'color_name': 'yellow', 'symbol': 'square', 'position_column': 10,
+                   'position_row': 7})
 
         # walls
         # middle barrier
@@ -148,13 +156,16 @@ class QuarterBoardGreen(QuarterBoard):
     def create_quarter_board(self):
         # target chips
         db.insert('chips',
-                  {'game_id': game_id, 'color': 'yellow', 'symbol': 'hexagon', 'position_column': 3, 'position_row': 9})
+                  {'game_id': game_id, 'color_name': 'yellow', 'symbol': 'hexagon', 'position_column': 3,
+                   'position_row': 9})
         db.insert('chips',
-                  {'game_id': game_id, 'color': 'red', 'symbol': 'circle', 'position_column': 1, 'position_row': 11})
+                  {'game_id': game_id, 'color_name': 'red', 'symbol': 'circle', 'position_column': 1,
+                   'position_row': 11})
         db.insert('chips',
-                  {'game_id': game_id, 'color': 'blue', 'symbol': 'square', 'position_column': 6, 'position_row': 12})
+                  {'game_id': game_id, 'color_name': 'blue', 'symbol': 'square', 'position_column': 6,
+                   'position_row': 12})
         db.insert('chips',
-                  {'game_id': game_id, 'color': 'green', 'symbol': 'triangle', 'position_column': 2,
+                  {'game_id': game_id, 'color_name': 'green', 'symbol': 'triangle', 'position_column': 2,
                    'position_row': 14})
 
         # walls
@@ -200,13 +211,16 @@ class QuarterBoardBlue(QuarterBoard):
     def create_quarter_board(self):
         # target chips
         db.insert('chips',
-                  {'game_id': game_id, 'color': 'blue', 'symbol': 'triangle', 'position_column': 13, 'position_row': 9})
+                  {'game_id': game_id, 'color_name': 'blue', 'symbol': 'triangle', 'position_column': 13,
+                   'position_row': 9})
         db.insert('chips',
-                  {'game_id': game_id, 'color': 'yellow', 'symbol': 'circle', 'position_column': 9, 'position_row': 11})
+                  {'game_id': game_id, 'color_name': 'yellow', 'symbol': 'circle', 'position_column': 9,
+                   'position_row': 11})
         db.insert('chips',
-                  {'game_id': game_id, 'color': 'red', 'symbol': 'square', 'position_column': 14, 'position_row': 13})
+                  {'game_id': game_id, 'color_name': 'red', 'symbol': 'square', 'position_column': 14,
+                   'position_row': 13})
         db.insert('chips',
-                  {'game_id': game_id, 'color': 'green', 'symbol': 'hexagon', 'position_column': 10,
+                  {'game_id': game_id, 'color_name': 'green', 'symbol': 'hexagon', 'position_column': 10,
                    'position_row': 14})
 
         # walls
@@ -306,7 +320,7 @@ class Board:
         print(self.targets)
 
     def add_targets_to_grid(self) -> None:
-        colors_and_symbols_all_targets = db.select_where_from_table('chips', ['color', 'symbol'],
+        colors_and_symbols_all_targets = db.select_where_from_table('chips', ['color_name', 'symbol'],
                                                                     {'game_id': game_id})
         for color_name, symbol in colors_and_symbols_all_targets:
             for target in self.targets:
