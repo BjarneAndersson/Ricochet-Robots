@@ -63,6 +63,9 @@ class Node:
     def get_position(self) -> dict:
         return self.position
 
+    def get_size(self) -> dict:
+        return self.size
+
     def reset(self) -> None:
         self.color = Colors.node['default']
 
