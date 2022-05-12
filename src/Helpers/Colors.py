@@ -46,3 +46,13 @@ class Colors:
     }
 
     background = dark_grey
+
+    individual_solution = {
+        'border': white,
+        'fill': grey
+    }
+
+    input_field = {
+        'active': red,
+        'inactive': individual_solution['border']
+    }

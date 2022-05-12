@@ -53,14 +53,14 @@ class Game:
                                     'y': self.FIELD_SIZE // 2 + self.menu.button.size[
                                         'height'] + 3 * self.FIELD_SIZE},
                                    {'width': self.FIELD_SIZE, 'height': 12 * self.FIELD_SIZE})
-        self.individual_solution = IndividualSolution(
-            {'x': self.FIELD_SIZE,
-             'y': self.board_offset['top'] + self.board.size['height'] + self.FIELD_SIZE // 2},
-            {'width': 5 * self.FIELD_SIZE, 'height': height_start_input})
 
+        self.individual_solution = {'position': {'x': self.FIELD_SIZE, 'y': self.board_offset['top'] + self.board.size[
+            'height'] + self.FIELD_SIZE // 2},
+                                    'size': {'width': 5 * self.FIELD_SIZE, 'height': height_start_input}}
         self.ready_button = {
-            'position': {'x': self.board_offset['left'] + self.individual_solution.size['width'] + self.FIELD_SIZE // 2,
-                         'y': self.board_offset['top'] + self.board.size['height'] + self.FIELD_SIZE // 2},
+            'position': {
+                'x': self.board_offset['left'] + self.individual_solution['size']['width'] + self.FIELD_SIZE // 2,
+                'y': self.board_offset['top'] + self.board.size['height'] + self.FIELD_SIZE // 2},
             'size': {'width': 5 * self.FIELD_SIZE, 'height': height_start_input}}
 
         self.create_robots()

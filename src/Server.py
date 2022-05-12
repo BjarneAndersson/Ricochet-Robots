@@ -93,6 +93,11 @@ def threaded_client(connection, address, game):
                             if action == 'GET':
                                 connection.sendall(pickle.dumps(game.FIELD_SIZE))
 
+                        elif path[1] == 'round':
+                            if path[2] == 'active':  # GET game/round/active
+                                if action == 'GET':
+                                    connection.sendall(pickle.dumps(game.is_round_active))
+
                         elif path[1] == 'robots':
                             if action == 'GET':  # 'GET game/robots'
                                 x = [robot.create_obj_for_draw() for robot in game.robots]
@@ -104,8 +109,8 @@ def threaded_client(connection, address, game):
                                 connection.sendall(pickle.dumps(x))
 
                         elif path[1] == 'hourglass':
-                            if action == 'GET' and len(path) == 2:  # 'GET game/hourglass'
-                                connection.sendall(pickle.dumps(game.hourglass))
+                            if path[2] == 'time_over':  # GET game/hourglass/time_over
+                                connection.sendall(pickle.dumps(game.hourglass.is_time_over()))
 
                         elif path[1] == 'menu':
                             if path[2] == 'button':
@@ -115,10 +120,10 @@ def threaded_client(connection, address, game):
                         elif path[1] == 'individual_solution':
                             if path[2] == 'position':  # 'GET game/individual_solution/position'
                                 if action == 'GET' and len(path) == 3:
-                                    connection.sendall(pickle.dumps(game.individual_solution.position))
+                                    connection.sendall(pickle.dumps(game.individual_solution['position']))
                             elif path[2] == 'size':  # 'GET game/individual_solution/size'
                                 if action == 'GET':
-                                    connection.sendall(pickle.dumps(game.individual_solution.size))
+                                    connection.sendall(pickle.dumps(game.individual_solution['size']))
 
                         elif path[1] == 'ready_button':
                             if path[2] == 'state':  # 'GET game/ready_button/state'
