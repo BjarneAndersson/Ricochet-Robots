@@ -227,7 +227,7 @@ def clear_unnecessary_data_in_db() -> None:  # delete rows in chips, robots, rou
             db.delete_where_from_table('chips', {'game_id': c_game_id})
             db.delete_where_from_table('robots', {'game_id': c_game_id})
             db.delete_where_from_table('rounds', {'game_id': c_game_id})
-            print(f"Cleared tables of game_id: {c_game_id}")
+        print(f"Cleared tables of game_ids: {finished_game_ids}")
 
 
 def main():
@@ -241,9 +241,11 @@ def main():
     game_id = db.get_next_id('games')
     db.insert('games', {})
     game = Game(db, game_id)
-    print(f'New game created!')
+    print(f'New game created!\n')
 
     clear_unnecessary_data_in_db()
+
+    print("\nWaiting for connections\n")
 
     while True:
         connection, address = s.accept()
@@ -275,7 +277,7 @@ if __name__ == '__main__':
     port = s.getsockname()[1]  # port
 
     s.listen()
-    print(f'Server Started\nIP: {ip_address} | Port: {port}\nWaiting for connections\n')
+    print(f'Server Started\nIP: {ip_address} | Port: {port}\n')
     pyperclip.copy(port)
 
     main()
