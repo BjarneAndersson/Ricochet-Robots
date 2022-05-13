@@ -18,13 +18,17 @@ class InputField:
         self.color = Colors.input_field['inactive']
         self.text = text
 
-    def change_state(self):
-        self.active = not self.active
+    def set_active_state(self, _state):
+        self.active = _state
         self.color = Colors.input_field['active'] if self.active else Colors.input_field['inactive']
+
+    def change_state(self):
+        self.set_active_state(not self.active)
 
     def handle_event(self, event):
         if event.key == pygame.K_RETURN:
-            self.network.send(f'POST user/{self.player_id}/solution?value={self.text}')
+            solution = self.text if self.text != '' else -1
+            self.network.send(f'POST user/{self.player_id}/solution?value={solution}')
             self.text = ''
             self.active = False
             self.color = Colors.input_field['inactive']
@@ -37,7 +41,7 @@ class InputField:
                 self.text += event.unicode
 
     def draw(self, window):
-        if self.text:
+        if self.text and self.active:
             text_rect = self.font.get_rect(str(self.text), size=64)
             text_rect.center = (self.position['x'] + 2 * (self.size['width'] // 4),
                                 self.position['y'] + 0.75 * (self.size['height'] // 3))

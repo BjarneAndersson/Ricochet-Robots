@@ -151,7 +151,10 @@ def main():
                     elif is_position_on_input_field(mouse_position):
                         is_time_over = network.send("GET game/hourglass/time_over")
                         if network.send("GET game/round/active") and not is_time_over:
-                            individual_solution.input_field.change_state()
+                            if individual_solution.input_field.active:
+                                individual_solution.input_field.set_active_state(False)
+                            else:
+                                individual_solution.input_field.set_active_state(True)
                     #
                     # elif is_position_on_menu_button(game.menu.button, mouse_position):
                     #     pass
@@ -162,11 +165,11 @@ def main():
                         ready_button.set_state(is_pressed)
 
                     else:
-                        pass
-                        # input_field.active = False
-                        # input_field.color = input_field.COLOR_INACTIVE
-                        #
-                        # game.menu.menu_button.pressed = False
+                        individual_solution.input_field.set_active_state(False)
+
+                if event.type == pygame.KEYDOWN:  # keyboard_input
+                    if individual_solution.input_field.active:
+                        individual_solution.input_field.handle_event(event)
 
     except Exception as e:
         print(e)
