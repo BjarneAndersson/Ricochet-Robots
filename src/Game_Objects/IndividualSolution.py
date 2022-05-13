@@ -24,7 +24,7 @@ class InputField:
 
     def handle_event(self, event):
         if event.key == pygame.K_RETURN:
-            self.network.send(f'POST user/{self.player_id}/solution?&value={self.text}')
+            self.network.send(f'POST user/{self.player_id}/solution?value={self.text}')
             self.text = ''
             self.active = False
             self.color = Colors.input_field['inactive']
