@@ -176,7 +176,8 @@ def threaded_client(connection, address, game):
                                 solution = queries['value']
                                 db.update_where_from_table('players', {'solution': solution}, {'player_id': player_id})
                                 connection.send(str.encode(str(200)))
-                                # ToDo: start timer
+                                if not game.hourglass.get_is_active():
+                                    game.hourglass.start_timer()
                         elif path[2] == 'change_status_next_round':  # "POST user/{id}/change_status_next_round"
                             if action == 'POST':
                                 if not game.is_round_active:
