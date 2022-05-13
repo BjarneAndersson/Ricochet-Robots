@@ -45,7 +45,7 @@ class Hourglass:
         self.start_timestamp = None
         self.active = False
         self.time_passed = 0
-        self.max_time = 10
+        self.max_time = 30
 
     def start_timer(self):
         self.start_timestamp = datetime.timestamp(datetime.now())
