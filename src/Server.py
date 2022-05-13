@@ -216,6 +216,20 @@ def threaded_client(connection, address, game):
     db.update_where_from_table('games', {'player_count': active_player_count}, {'game_id': game_id})
 
 
+def clear_unnecessary_data_in_db() -> None:  # delete rows in chips, robots, rounds where there's a winner in the game
+    request_result = db.select_where_from_table('games', ['game_id'], {'winner_player_id': 'NULL'},
+                                                comparison_symbol='<>')
+    if request_result is None:
+        return
+    else:
+        finished_game_ids = [game_id_tpl[0] for game_id_tpl in request_result]
+        for c_game_id in finished_game_ids:
+            db.delete_where_from_table('chips', {'game_id': c_game_id})
+            db.delete_where_from_table('robots', {'game_id': c_game_id})
+            db.delete_where_from_table('rounds', {'game_id': c_game_id})
+            print(f"Cleared tables of game_id: {c_game_id}")
+
+
 def main():
     global db
     global active_player_count
@@ -228,6 +242,8 @@ def main():
     db.insert('games', {})
     game = Game(db, game_id)
     print(f'New game created!')
+
+    clear_unnecessary_data_in_db()
 
     while True:
         connection, address = s.accept()
