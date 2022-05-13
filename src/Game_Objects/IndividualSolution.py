@@ -43,8 +43,8 @@ class InputField:
     def draw(self, window):
         if self.text and self.active:
             text_rect = self.font.get_rect(str(self.text), size=64)
-            text_rect.center = (self.position['x'] + 2 * (self.size['width'] // 4),
-                                self.position['y'] + 0.75 * (self.size['height'] // 3))
+            text_rect.center = (self.position['x'] + (self.size['width'] // 2),
+                                self.position['y'] + (self.size['height'] // 2))
             self.font.render_to(window, text_rect, str(self.text), self.color, size=64)
 
         pygame.draw.rect(window, self.color, self.rect, width=5)
@@ -90,12 +90,19 @@ class IndividualSolution:
             #                   self.size['width'] - 4, self.size['height'] - (self.size['width'] // 3)))
         else:  # render player solution
             text_rect = self.font.get_rect(str(player_solution), size=64)
-            text_rect.center = (self.position['x'] + 2 * (self.size['width'] // 4),
-                                self.position['y'] + 0.75 * (self.size['width'] // 3))
+            text_rect.center = (self.position['x'] + (self.size['width'] // 2),
+                                self.position['y'] + 0.5 * 2 * (self.size['height'] // 3))
             self.font.render_to(window, text_rect, str(player_solution), (0, 0, 0), size=64)
 
         # render player name
-        self.font.render_to(window, (self.position['x'] + (self.size['height'] // 4) * 0.5,
-                                     self.position['y'] + 2 * (self.size['height'] // 3) + (
-                                             self.size['height'] // 3) * 0.25),
-                            self.network.send(f"GET user/{self.player_id}/name"), (0, 0, 0), size=26)
+        font_size_name = 26
+        player_name = self.network.send(f"GET user/{self.player_id}/name")
+        text_rect_name = self.font.get_rect(player_name, size=font_size_name)
+        text_rect_name.center = (self.position['x'] + (self.size['width'] // 2),
+                                 self.position['y'] + 2 * (self.size['height'] // 3) + (self.size['height'] // 6))
+        self.font.render_to(window, text_rect_name, player_name, (0, 0, 0), size=font_size_name)
+
+        # self.font.render_to(window, (self.position['x'] + (self.size['width'] // 2),
+        #                              self.position['y'] + 2 * (self.size['height'] // 3) + (
+        #                                      self.size['height'] // 3) * 0.5),
+        #                     self.network.send(f"GET user/{self.player_id}/name"), (0, 0, 0), size=26)
