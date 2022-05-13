@@ -60,7 +60,7 @@ def draw() -> None:
         robot.draw(window)
 
     # network.send("GET game/menu/button").draw(window)
-    # network.send("GET game/hourglass").draw(window)
+    network.send("GET game/hourglass").draw(window)
 
     individual_solution.draw(window)
 
@@ -168,7 +168,8 @@ def main():
                         #
                         # game.menu.menu_button.pressed = False
 
-    except:
+    except Exception as e:
+        print(e)
         raise RuntimeError("Game crashed")
     finally:
         pygame.quit()

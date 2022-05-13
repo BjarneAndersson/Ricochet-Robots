@@ -99,18 +99,20 @@ def threaded_client(connection, address, game):
                                     connection.sendall(pickle.dumps(game.is_round_active))
 
                         elif path[1] == 'robots':
-                            if action == 'GET':  # 'GET game/robots'
+                            if action == 'GET' and len(path) == 2:  # 'GET game/robots'
                                 x = [robot.create_obj_for_draw() for robot in game.robots]
                                 connection.sendall(pickle.dumps(x))
 
                         elif path[1] == 'targets':
-                            if action == 'GET':  # 'GET targets/robots'
+                            if action == 'GET' and len(path) == 2:  # 'GET game/targets'
                                 x = [target.create_obj_for_draw() for target in game.board.targets]
                                 connection.sendall(pickle.dumps(x))
 
                         elif path[1] == 'hourglass':
-                            if path[2] == 'time_over':  # GET game/hourglass/time_over
-                                connection.sendall(pickle.dumps(game.hourglass.is_time_over()))
+                            if action == 'GET' and len(path) == 2:  # 'GET game/hourglass'
+                                connection.sendall(pickle.dumps(game.hourglass.create_obj_for_draw()))
+                            elif path[2] == 'time_over':  # GET game/hourglass/time_over
+                                connection.sendall(pickle.dumps(game.hourglass.get_is_time_over()))
 
                         elif path[1] == 'menu':
                             if path[2] == 'button':

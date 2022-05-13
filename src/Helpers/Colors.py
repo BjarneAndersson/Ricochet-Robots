@@ -56,3 +56,9 @@ class Colors:
         'active': red,
         'inactive': individual_solution['border']
     }
+
+    hourglass = {
+        'background': background,
+        'fill': green,
+        'border': white
+    }
