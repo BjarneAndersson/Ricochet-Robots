@@ -101,8 +101,3 @@ class IndividualSolution:
         text_rect_name.center = (self.position['x'] + (self.size['width'] // 2),
                                  self.position['y'] + 2 * (self.size['height'] // 3) + (self.size['height'] // 6))
         self.font.render_to(window, text_rect_name, player_name, (0, 0, 0), size=font_size_name)
-
-        # self.font.render_to(window, (self.position['x'] + (self.size['width'] // 2),
-        #                              self.position['y'] + 2 * (self.size['height'] // 3) + (
-        #                                      self.size['height'] // 3) * 0.5),
-        #                     self.network.send(f"GET user/{self.player_id}/name"), (0, 0, 0), size=26)
