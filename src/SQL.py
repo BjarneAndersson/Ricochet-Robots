@@ -64,7 +64,7 @@ class SQL:
     def select_where_from_table(self, table_name, columns: list, statement_value_pairs: dict,
                                 single_result: bool = False,
                                 result_is_list_in_str_format: bool = False,
-                                comparison_symbol: bool = '='):
+                                comparison_symbol: str = '='):
         columns = str(columns).replace("[", "").replace("]", "").replace("'", "")
         query = f"SELECT {columns} FROM {table_name} WHERE "
 
