@@ -66,6 +66,8 @@ def draw() -> None:
 
     ready_button.draw(window)
 
+    network.send("GET game/best_solution").draw(window, font)
+
     pygame.display.update()
 
 

@@ -9,6 +9,7 @@ from Game_Objects import IndividualSolution
 from Game_Objects import Menu
 from Game_Objects import MenuButton
 from Game_Objects import ReadyButton
+from Game_Objects import BestSolution
 from Game_Objects import Robot
 
 from SQL import SQL
@@ -62,6 +63,15 @@ class Game:
                 'x': self.board_offset['left'] + self.individual_solution['size']['width'] + self.FIELD_SIZE // 2,
                 'y': self.board_offset['top'] + self.board.size['height'] + self.FIELD_SIZE // 2},
             'size': {'width': 5 * self.FIELD_SIZE, 'height': height_start_input}}
+
+        self.best_solution = BestSolution(self.db, self.game_id,
+                                          {'x': self.FIELD_SIZE // 2 + self.hourglass.size[
+                                              'width'] + self.FIELD_SIZE // 2 + self.individual_solution['size'][
+                                                    'width'] + self.FIELD_SIZE // 2 + self.ready_button['size'][
+                                                    'width'] + self.FIELD_SIZE // 2,
+                                           'y': self.board_offset['top'] + self.board.size[
+                                               'height'] + self.FIELD_SIZE // 2},
+                                          self.individual_solution['size'])
 
         self.create_robots()
 

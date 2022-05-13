@@ -4,6 +4,7 @@ from .IndividualSolution import IndividualSolution
 from .Menu import Menu
 from .Menu import MenuButton
 from .ReadyButton import ReadyButton
+from .BestSolution import BestSolution
 from .Node import Node
 from .Robot import Robot
 from .Target import Target

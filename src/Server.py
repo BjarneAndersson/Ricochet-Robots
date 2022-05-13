@@ -114,6 +114,10 @@ def threaded_client(connection, address, game):
                             elif path[2] == 'time_over':  # GET game/hourglass/time_over
                                 connection.sendall(pickle.dumps(game.hourglass.get_is_time_over()))
 
+                        elif path[1] == 'best_solution':
+                            if action == 'GET' and len(path) == 2:  # 'GET game/best_solution'
+                                connection.sendall(pickle.dumps(game.best_solution.create_obj_for_draw()))
+
                         elif path[1] == 'menu':
                             if path[2] == 'button':
                                 if action == 'GET' and len(path) == 3:  # 'GET game/menu/button'
