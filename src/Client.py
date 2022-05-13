@@ -117,6 +117,7 @@ def main():
                                              player_id)
     ready_button = ReadyButton(network.send("GET game/ready_button/position"),
                                network.send("GET game/ready_button/size"))
+    ready_button.set_state(network.send("GET game/ready_button/state"))
 
     window = pygame.display.set_mode(network.send("GET game/window_dimensions"))
     pygame.display.set_caption("Ricochet Robots")
