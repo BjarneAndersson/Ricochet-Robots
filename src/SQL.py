@@ -63,7 +63,8 @@ class SQL:
 
     def select_where_from_table(self, table_name, columns: list, statement_value_pairs: dict,
                                 single_result: bool = False,
-                                result_is_list_in_str_format: bool = False):
+                                result_is_list_in_str_format: bool = False,
+                                comparison_symbol: bool = '='):
         columns = str(columns).replace("[", "").replace("]", "").replace("'", "")
         query = f"SELECT {columns} FROM {table_name} WHERE "
 
@@ -71,7 +72,7 @@ class SQL:
             if i != 0:
                 query += ' AND '
             value_for_query = value if type(value) != str else f"'{value}'"
-            query += f"{statement} = {value_for_query}".replace('\"', '\'')
+            query += f"{statement} {comparison_symbol} {value_for_query}".replace('\"', '\'')
 
         query += ";"
 
