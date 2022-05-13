@@ -71,8 +71,11 @@ class SQL:
         for i, (statement, value) in enumerate(statement_value_pairs.items()):
             if i != 0:
                 query += ' AND '
-            value_for_query = value if type(value) != str else f"'{value}'"
-            query += f"{statement} {comparison_symbol} {value_for_query}".replace('\"', '\'')
+            if value == 'NULL':
+                query += f"{statement} IS {'' if comparison_symbol == '=' else 'NOT'} NULL".replace('\"', '\'')
+            else:
+                value_for_query = value if type(value) != str else f"'{value}'"
+                query += f"{statement} {comparison_symbol} {value_for_query}".replace('\"', '\'')
 
         query += ";"
 
