@@ -64,6 +64,9 @@ def draw() -> None:
 
     individual_solution.draw(window)
 
+    ready_button_global_state_pressed = True if network.send("GET game/ready_button/state") == 'pressed' else False
+    if ready_button_global_state_pressed:
+        ready_button.set_state(True)
     ready_button.draw(window)
 
     network.send("GET game/best_solution").draw(window, font)
