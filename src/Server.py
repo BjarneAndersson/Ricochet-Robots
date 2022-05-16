@@ -55,6 +55,7 @@ def threaded_client(connection, address):
     global db
     global active_player_count
     global game_id
+    global game
 
     player_id = db.get_next_id('players')
     connection.send(str.encode(str(player_id)))  # send the client the player_id
@@ -70,6 +71,8 @@ def threaded_client(connection, address):
             else:
                 action, path, queries = process_data(data)
 
+                game.check_if_new_draw_objects_should_be_created()
+
                 if path[0] == 'game':
                     if action == 'GET' and len(path) == 1:  # 'GET game'
                         connection.sendall(pickle.dumps(game))
@@ -77,8 +80,7 @@ def threaded_client(connection, address):
                         if path[1] == 'board':
                             if path[2] == 'grid':
                                 if action == 'GET':  # 'GET game/board/grid'
-                                    x = [[node.create_obj_for_draw() for node in row] for row in game.board.grid]
-                                    connection.sendall(pickle.dumps(x))
+                                    connection.sendall(pickle.dumps(game.grid_draw))
                             elif path[2] == 'offset':
                                 if action == 'GET':  # 'GET game/board/offset'
                                     connection.sendall(pickle.dumps(game.board_offset))
@@ -101,23 +103,21 @@ def threaded_client(connection, address):
 
                         elif path[1] == 'robots':
                             if action == 'GET' and len(path) == 2:  # 'GET game/robots'
-                                x = [robot.create_obj_for_draw() for robot in game.robots]
-                                connection.sendall(pickle.dumps(x))
+                                connection.sendall(pickle.dumps(game.robots_draw))
 
                         elif path[1] == 'targets':
                             if action == 'GET' and len(path) == 2:  # 'GET game/targets'
-                                x = [target.create_obj_for_draw() for target in game.board.targets]
-                                connection.sendall(pickle.dumps(x))
+                                connection.sendall(pickle.dumps(game.targets_draw))
 
                         elif path[1] == 'hourglass':
                             if action == 'GET' and len(path) == 2:  # 'GET game/hourglass'
-                                connection.sendall(pickle.dumps(game.hourglass.create_obj_for_draw()))
+                                connection.sendall(pickle.dumps(game.hourglass_draw))
                             elif path[2] == 'time_over':  # GET game/hourglass/time_over
                                 connection.sendall(pickle.dumps(game.hourglass.get_is_time_over()))
 
                         elif path[1] == 'best_solution':
                             if action == 'GET' and len(path) == 2:  # 'GET game/best_solution'
-                                connection.sendall(pickle.dumps(game.best_solution.create_obj_for_draw()))
+                                connection.sendall(pickle.dumps(game.best_solution_draw))
 
                         elif path[1] == 'menu':
                             if path[2] == 'button':

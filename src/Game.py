@@ -84,6 +84,15 @@ class Game:
 
         self.control_move_count: int = 0
 
+        self.game_tick_rate = 30
+        self.last_creation_of_draw_objects: datetime = datetime.now()
+
+        self.grid_draw = None
+        self.robots_draw = None
+        self.targets_draw = None
+        self.hourglass_draw = None
+        self.best_solution_draw = None
+
     def create_robots(self) -> None:
         used_positions: list = [{'row': 7, 'column': 7}, {'row': 7, 'column': 8}, {'row': 8, 'column': 7},
                                 {'row': 8, 'column': 8}]
@@ -135,6 +144,24 @@ class Game:
 
     def reset_all_player_solutions(self) -> None:
         self.db.update_where_from_table('players', {'solution': -1}, {'game_id': self.game_id})
+
+    def check_if_new_draw_objects_should_be_created(self) -> bool:
+        current_datetime = datetime.now()
+        dif = current_datetime - self.last_creation_of_draw_objects
+        dif_micro = dif.seconds * 10 ** 6 + dif.microseconds
+        if dif_micro >= 10 ** 6 / 30:
+            self.last_creation_of_draw_objects = datetime.now()
+            self.create_new_draw_objects()
+            return True
+        return False
+
+    def create_new_draw_objects(self):
+        print(datetime.now())
+        self.grid_draw = [[node.create_obj_for_draw() for node in row] for row in self.board.grid]
+        self.robots_draw = [robot.create_obj_for_draw() for robot in self.robots]
+        self.targets_draw = [target.create_obj_for_draw() for target in self.board.targets]
+        self.hourglass_draw = self.hourglass.create_obj_for_draw()
+        self.best_solution_draw = self.best_solution.create_obj_for_draw()
 
     def start_round(self):
         self.is_round_active = True
