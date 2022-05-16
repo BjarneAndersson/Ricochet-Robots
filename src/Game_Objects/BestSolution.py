@@ -58,13 +58,18 @@ class BestSolution:
         all_player_ids_and_solutions_in_game: list = self.db.select_where_from_table('players',
                                                                                      ['player_id', 'solution'], {
                                                                                          'game_id': self.game_id})  # get all player in game
-        all_player_ids_and_solutions_in_game = list(
-            filter(lambda x: x[1] != -1, all_player_ids_and_solutions_in_game))  # filter out player without a solution
-        all_player_ids_and_solutions_in_game.sort(key=lambda x: x[1])  # sort after solution
-        if len(all_player_ids_and_solutions_in_game) != 0:
-            best_player_id = all_player_ids_and_solutions_in_game[0][0]
-            name, solution = \
-            self.db.select_where_from_table('players', ['name', 'solution'], {'player_id': best_player_id})[0]
+        if all_player_ids_and_solutions_in_game:
+            all_player_ids_and_solutions_in_game = list(
+                filter(lambda x: x[1] != -1,
+                       all_player_ids_and_solutions_in_game))  # filter out player without a solution
+            all_player_ids_and_solutions_in_game.sort(key=lambda x: x[1])  # sort after solution
+            if len(all_player_ids_and_solutions_in_game) != 0:
+                best_player_id = all_player_ids_and_solutions_in_game[0][0]
+                name, solution = \
+                    self.db.select_where_from_table('players', ['name', 'solution'], {'player_id': best_player_id})[0]
+            else:
+                solution = ''
+                name = ''
         else:
             solution = ''
             name = ''
