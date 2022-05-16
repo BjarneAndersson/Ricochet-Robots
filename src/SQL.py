@@ -150,8 +150,3 @@ class SQL:
 
 if __name__ == '__main__':
     db = SQL("localhost", "root", "")
-    print(f"games column: {db.get_all_column_names('games')}")
-    print(
-        f"active bots: {db.select_where_from_table('games', 'active_bots', {'game_id': 1}, single_result=True, result_is_list_in_str_format=True)}")
-    print(f"duration: {db.select_where_from_table('games', 'duration', {'game_id': 1}, single_result=True)}")
-    print(f"insert new game: {db.insert('games', {})}")
