@@ -156,7 +156,6 @@ class Game:
         return False
 
     def create_new_draw_objects(self):
-        print(datetime.now())
         self.grid_draw = [[node.create_obj_for_draw() for node in row] for row in self.board.grid]
         self.robots_draw = [robot.create_obj_for_draw() for robot in self.robots]
         self.targets_draw = [target.create_obj_for_draw() for target in self.board.targets]
