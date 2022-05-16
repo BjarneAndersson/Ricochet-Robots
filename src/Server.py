@@ -19,6 +19,7 @@ from SQL import SQL
 db: SQL
 active_player_count: int = 0
 game_id: int
+game: Game
 
 
 def process_data(data: str):
@@ -50,7 +51,7 @@ def process_data(data: str):
     return action, path, queries
 
 
-def threaded_client(connection, address, game):
+def threaded_client(connection, address):
     global db
     global active_player_count
     global game_id
@@ -239,6 +240,7 @@ def main():
     global db
     global active_player_count
     global game_id
+    global game
 
     db = SQL("localhost", "root", "")
     # db.clear_temporary_tables()
@@ -263,7 +265,7 @@ def main():
         else:
             game.ready = False
 
-        start_new_thread(threaded_client, (connection, address, game))
+        start_new_thread(threaded_client, (connection, address))
 
         active_player_count += 1
 
