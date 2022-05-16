@@ -83,6 +83,7 @@ class Game:
         self.active_player_id: int = None
 
         self.control_move_count: int = 0
+        self.selected_robot: Robot = None
 
         self.game_tick_rate = 30
         self.last_creation_of_draw_objects: datetime = datetime.now()
@@ -92,6 +93,7 @@ class Game:
         self.targets_draw = None
         self.hourglass_draw = None
         self.best_solution_draw = None
+
 
     def create_robots(self) -> None:
         used_positions: list = [{'row': 7, 'column': 7}, {'row': 7, 'column': 8}, {'row': 8, 'column': 7},
@@ -176,13 +178,26 @@ class Game:
                                                   single_result=True)
         self.db.update_where_from_table('chips', {'revealed': 1}, {'chip_id': chip_id})
 
-    def get_best_player_id(self) -> int:  # solution >= 0 => valid | solution < 0 => invalid
-        best_player_id = self.db.select_where_from_table('player_id', 'players', 'solution',
-                                                         '(SELECT MIN(solution) FROM players)', 'last_solution_change',
-                                                         '(SELECT MIN(last_change) FROM players)', 'game_id',
-                                                         self.game_id)
+    def solutions_review(self):
+        self.active_player_id = self.get_best_player_id_in_round()
 
-        return best_player_id
+        if not self.active_player_id:
+            print('No one found a valid solution!\nSkipping target chip!')
+            self.finish_round()
+
+    def get_best_player_id_in_round(self) -> int:
+        all_player_ids_and_solutions_in_game: list = self.db.select_where_from_table('players',
+                                                                                     ['player_id', 'solution'], {
+                                                                                         'game_id': self.game_id})  # get all player in game
+        if all_player_ids_and_solutions_in_game:
+            all_player_ids_and_solutions_in_game = list(
+                filter(lambda x: x[1] != -1,
+                       all_player_ids_and_solutions_in_game))  # filter out player without a solution
+            all_player_ids_and_solutions_in_game.sort(key=lambda x: x[1])  # sort after solution
+            if len(all_player_ids_and_solutions_in_game) != 0:
+                best_player_id = all_player_ids_and_solutions_in_game[0][0]
+                return best_player_id
+        return None
 
     def control_move_count_gt_player_solution(self):
         self.selected_robot.border = False

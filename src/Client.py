@@ -145,13 +145,10 @@ def main():
 
                     # check: mouse click on the grid
                     if is_position_on_grid(mouse_position):  # mouse click on the grid
-                        pass
-                        # node = game.board.get_node(mouse_position)
-                        # if game.hourglass.is_time_over():
-                        #     if player_id == network.send('GET game/active_player_id'):
-                        #         network.send('POST game/robots/select?&color=none')
-                        #         network.send('POST game/robots/reset_borders')
-                        #         network.send(f'POST game/robots/select?&row={node.row}&column={node.column}')
+                        if network.send("GET game/hourglass/time_over"):
+                            if player_id == network.send('GET user/active_player_id'):
+                                network.send(
+                                    f"POST game/robots/select?position_x={mouse_position['x']}&position_y={mouse_position['y']}")
 
                     # check: mouse click on client_input field
                     elif is_position_on_input_field(mouse_position):
@@ -176,6 +173,11 @@ def main():
                 if event.type == pygame.KEYDOWN:  # keyboard_input
                     if individual_solution.input_field.active:
                         individual_solution.input_field.handle_event(event)
+                    elif player_id == network.send('GET user/active_player_id') and network.send(
+                            'GET game/robots/select'):
+                        if event.key in (pygame.K_UP, pygame.K_DOWN, pygame.K_LEFT, pygame.K_RIGHT):
+                            network.send(
+                                f'POST game/robots/move?direction={convert_pygame_key_to_direction_str(event.key)}')
 
     except Exception as e:
         print(e)

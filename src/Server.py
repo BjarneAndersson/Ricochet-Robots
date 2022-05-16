@@ -123,6 +123,32 @@ def process_requests(data: str):
                     elif path[1] == 'robots':
                         if action == 'GET' and len(path) == 2:  # 'GET game/robots'
                             return pickle.dumps(game.robots_draw)
+                        elif path[2] == 'select':
+                            if action == 'GET' and len(path) == 3:
+                                if game.selected_robot:
+                                    return pickle.dumps(game.selected_robot.robot_id)
+                                else:
+                                    return pickle.dumps(None)
+                            elif action == 'POST' and len(path) == 3:
+                                if game.selected_robot:
+                                    db.update_where_from_table('robots', {'in_use': 0},
+                                                               {'robot_id': game.selected_robot.robot_id})
+                                node_at_position = game.board.get_node(
+                                    {'x': int(queries['position_x']), 'y': int(queries['position_y'])})
+                                grid_position = node_at_position.get_position()
+                                try:
+                                    game.selected_robot = [robot for robot in game.robots if
+                                                           robot.get_position()['column'] == grid_position['column'] and
+                                                           robot.get_position()['row'] == grid_position['row']][0]
+                                    db.update_where_from_table('robots', {'in_use': 1},
+                                                               {'robot_id': game.selected_robot.robot_id})
+                                except IndexError:
+                                    game.selected_robot = None
+                                return str(200).encode()
+                        elif path[2] == 'move':  # 'GET game/robots/move'
+                            if action == 'POST' and len(path) == 3:
+                                game.selected_robot.move(queries['direction'])
+                                return str(200).encode()
 
                     elif path[1] == 'targets':
                         if action == 'GET' and len(path) == 2:  # 'GET game/targets'
@@ -180,6 +206,9 @@ def process_requests(data: str):
                         db.insert('players', {'game_id': game_id,
                                               'name': queries['name']})
                         return str.encode("200")
+                elif path[1] == 'active_player_id':
+                    if action == 'GET' and len(path) == 2:
+                        return pickle.dumps(game.active_player_id)
                 else:
                     player_id = int(path[1])
 
@@ -309,6 +338,13 @@ def main():
                 game.ready = True if active_player_count >= 2 else False
             else:
                 service_connection(key, mask)
+
+        # check for game logics
+        datetime_now = datetime.now()
+        if game.hourglass.active:
+            game.hourglass.calc_passed_time(datetime_now)
+        if game.hourglass.get_is_time_over() and not game.active_player_id:
+            game.solutions_review()
 
 
 if __name__ == '__main__':

@@ -16,25 +16,35 @@ class Robot:
         self.robot_id = robot_id
         self.field_size = field_size
         self.current_node = current_node
+        self.current_node.is_robot = True
 
     def move(self, direction: str) -> None:
+        old_node = self.current_node
         if direction == 'up':
-            while self.current_node.neighbors['up'] and not self.current_node.neighbors['up'].is_robot():
-                self.current_node = self.current_node.neighbors['up']
+            while self.current_node.neighbors['top'] and not self.current_node.neighbors['top'].is_robot:
+                self.current_node = self.current_node.neighbors['top']
         elif direction == 'down':
-            while self.current_node.neighbors['down'] and not self.current_node.neighbors['down'].is_robot():
-                self.current_node = self.current_node.neighbors['down']
+            while self.current_node.neighbors['bottom'] and not self.current_node.neighbors['bottom'].is_robot:
+                self.current_node = self.current_node.neighbors['bottom']
         elif direction == 'left':
-            while self.current_node.neighbors['left'] and not self.current_node.neighbors['left'].is_robot():
+            while self.current_node.neighbors['left'] and not self.current_node.neighbors['left'].is_robot:
                 self.current_node = self.current_node.neighbors['left']
         elif direction == 'right':
-            while self.current_node.neighbors['right'] and not self.current_node.neighbors['right'].is_robot():
+            while self.current_node.neighbors['right'] and not self.current_node.neighbors['right'].is_robot:
                 self.current_node = self.current_node.neighbors['right']
+
+        old_node.is_robot = False
+        self.current_node.is_robot = True
 
         self.db.update_where_from_table('robots', {'position_column': self.current_node.get_position()['column']},
                                         {'robot_id': self.robot_id})
         self.db.update_where_from_table('robots', {'position_row': self.current_node.get_position()['row']},
                                         {'robot_id': self.robot_id})
+
+    def get_position(self) -> dict:
+        column, row = \
+        self.db.select_where_from_table('robots', ['position_column', 'position_row'], {'robot_id': self.robot_id})[0]
+        return {'column': int(column), 'row': int(row)}
 
     def create_obj_for_draw(self):
         color = Colors.robot[self.db.select_where_from_table('robots', ['color_name'],

@@ -59,6 +59,7 @@ class Node:
             self.color = Colors.node['barrier']
 
         self.neighbors = dict()
+        self.is_robot: bool = False
 
     def get_position(self) -> dict:
         return self.position
