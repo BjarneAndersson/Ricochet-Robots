@@ -150,6 +150,11 @@ def process_requests(data: str):
                                 is_moved = game.selected_robot.move(queries['direction'])
                                 if is_moved:
                                     game.control_move_count += 1
+                                    if game.control_move_count <= game.active_player_solution:
+                                        if game.check_robot_on_target():
+                                            game.finish_round()
+                                    else:
+                                        game.pass_active_status_on_to_next_player_in_solution_list()
                                 return str(200).encode()
 
                     elif path[1] == 'targets':

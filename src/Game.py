@@ -81,6 +81,7 @@ class Game:
             self.board_offset['top'] + self.board.rect.height + self.board_offset['bottom'])
 
         self.active_player_id: int = None
+        self.active_player_solution: int = None
 
         self.control_move_count: int = 0
         self.selected_robot: Robot = None
@@ -180,10 +181,26 @@ class Game:
 
     def solutions_review(self):
         self.active_player_id = self.get_best_player_id_in_round()
+        self.active_player_solution = self.db.select_where_from_table('players', ['solution'],
+                                                                      {'player_id': self.active_player_id},
+                                                                      single_result=True)
+        self.control_move_count = 0
 
         if not self.active_player_id:
             print('No one found a valid solution!\nSkipping target chip!')
             self.finish_round()
+
+    def check_robot_on_target(self):
+        active_chip_id = self.db.select_where_from_table('chips', ['chip_id'], {'game_id': self.game_id, 'revealed': 1},
+                                                         single_result=True)
+        active_chip_position_raw = \
+        self.db.select_where_from_table('chips', ['position_column', 'position_row'], {'chip_id': active_chip_id})[0]
+        active_chip_position = {'column': active_chip_position_raw[0], 'row': active_chip_position_raw[1]}
+        active_robot_position = self.selected_robot.get_position()
+
+        if active_chip_position == active_robot_position:
+            return True
+        return False
 
     def get_best_player_id_in_round(self) -> int:
         all_player_ids_and_solutions_in_game: list = self.db.select_where_from_table('players',
@@ -199,59 +216,35 @@ class Game:
                 return best_player_id
         return None
 
-    def control_move_count_gt_player_solution(self):
-        self.selected_robot.border = False
-        self.selected_robot.current_node.robot = None
-        self.selected_robot.current_node = self.selected_robot.home_node
-        self.selected_robot.current_node.robot = self.selected_robot
-        self.selected_robot.position_window = self.selected_robot.current_node.get_position_window()
-        self.selected_robot = None
-
-        if len(self.players_guessed) >= 2:
-            self.players_guessed.pop(0)
-            self.active_player = self.get_best_player_in_round()
-
-            self.control_move_count = 0
-        else:
-            print('No one found a valid solution!\nSkipping target chip!')
+    def pass_active_status_on_to_next_player_in_solution_list(self):
+        self.db.update_where_from_table('players', {'solution': -1}, {'player_id': self.active_player_id})
+        self.solutions_review()
 
     def finish_round(self):
         self.is_round_active = False
 
-        self.selected_chip.is_revealed = False
+        chip_id = self.db.select_where_from_table('rounds', ['chip_id'], {'round_id': self.round_id},
+                                                  single_result=True)
 
-        # get all player_ids that are in the game
-        all_user_ids = self.db.select_where_from_table('player_id', 'players', 'game_id', self.game_id)
-        print(all_user_ids)
-
-        duration: int = self.db.select_where_from_table('started_at', 'rounds', 'round_id',
-                                                        self.round_id) - datetime.timestamp(datetime.now())
-
-        best_player_id: int = self.get_best_player_id()
-        best_solution: int = self.db.select_where_from_table('solution', 'players', 'player_id', best_player_id)
-
-        self.db.update_round(self.round_id, duration, best_solution, best_player_id)
-
-        if best_solution >= 0:
-
-            best_player.target_chips.append(self.selected_chip)
-            self.target_chips.remove(self.selected_chip)
-
-            self.selected_robot.border = False
-            for robot in self.robots:
-                robot.home_node = robot.current_node
+        if self.active_player_id:
+            self.db.update_where_from_table('chips', {'revealed': 0, 'obtained_by_player_id': self.active_player_id},
+                                            {'chip_id': chip_id})
         else:
-            pass
+            self.db.update_where_from_table('chips', {'revealed': 0}, {'chip_id': chip_id})
 
-        self.hourglass.current_time = 0
-        self.control_move_count = 0
+        round_started_at: datetime = self.db.select_where_from_table('rounds', ['started_at'],
+                                                                     {'round_id': self.round_id}, single_result=True)
+
+        duration = datetime.now() - round_started_at
+        duration = duration.seconds
+
+        self.db.update_where_from_table('rounds', {'duration': duration}, {'round_id': self.round_id})
+
+        self.active_player_id = None
+        self.active_player_solution = None
+
+        self.db.update_where_from_table('robots', {'in_use': 0}, {'robot_id': self.selected_robot.robot_id})
         self.selected_robot = None
-        self.selected_chip = None
-        self.active_player = None
 
-        print('\nLeaderboard:')
-        for player in self.players:
-            print(f"Player: {player.name} | Score: {len(player.target_chips)}")
-        print('')
-
+        self.reset_all_player_solutions()
         self.player_count_ready_for_round = 0
