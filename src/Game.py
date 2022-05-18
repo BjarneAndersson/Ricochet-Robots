@@ -181,10 +181,6 @@ class Game:
 
     def solutions_review(self):
         self.active_player_id = self.get_best_player_id_in_round()
-        self.active_player_solution = self.db.select_where_from_table('players', ['solution'],
-                                                                      {'player_id': self.active_player_id},
-                                                                      single_result=True)
-        self.control_move_count = 0
 
         if not self.active_player_id:
             print('No one found a valid solution!\nSkipping target chip!')
