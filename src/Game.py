@@ -165,6 +165,9 @@ class Game:
         self.hourglass_draw = self.hourglass.create_obj_for_draw()
         self.best_solution_draw = self.best_solution.create_obj_for_draw()
 
+    def set_global_ready_button_state(self, state_pressed):
+        self.db.update_where_from_table('players', {'ready_for_round': int(state_pressed)}, {'game_id': self.game_id})
+
     def start_round(self):
         self.is_round_active = True
         self.db.insert('rounds', {'game_id': self.game_id, 'round_number': self.get_new_round_number(),
@@ -178,6 +181,8 @@ class Game:
         chip_id = self.db.select_where_from_table('rounds', ['chip_id'], {'round_id': self.round_id},
                                                   single_result=True)
         self.db.update_where_from_table('chips', {'revealed': 1}, {'chip_id': chip_id})
+
+        self.set_global_ready_button_state(True)
 
     def solutions_review(self):
         self.active_player_id = self.get_best_player_id_in_round()

@@ -64,9 +64,8 @@ def draw() -> None:
 
     individual_solution.draw(window)
 
-    ready_button_global_state_pressed = True if network.send("GET game/ready_button/state") == 'pressed' else False
-    if ready_button_global_state_pressed:
-        ready_button.set_state(True)
+    ready_button_state_pressed = network.send(f"GET user/{player_id}/ready_button/state")
+    ready_button.set_state(ready_button_state_pressed)
     ready_button.draw(window)
 
     network.send("GET game/best_solution").draw(window, font)
@@ -194,6 +193,6 @@ if __name__ == '__main__':
                     "port": port_server}
 
     # player_name = input('Please enter your name: ')
-    player_name = 'Bjarne'
+    player_name = 'PC'
 
     main()

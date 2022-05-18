@@ -260,6 +260,13 @@ def process_requests(data: str):
                                 new_status = True
                             return pickle.dumps(new_status)
 
+                    elif path[2] == 'ready_button':
+                        if path[3] == 'state':
+                            if action == 'GET':
+                                return pickle.dumps(bool(int(db.select_where_from_table('players', ['ready_for_round'],
+                                                                                        {'player_id': player_id},
+                                                                                        single_result=True))))
+
             elif path[0] == 'colors':
                 if action == 'GET' and len(path) == 1:  # 'GET colors'
                     return pickle.dumps(Colors)
