@@ -189,6 +189,11 @@ class Game:
         if not self.active_player_id:
             print('No one found a valid solution!\nSkipping target chip!')
             self.finish_round()
+        else:
+            self.active_player_solution = self.db.select_where_from_table('players', ['solution'],
+                                                                          {'player_id': self.active_player_id},
+                                                                          single_result=True)
+            self.control_move_count = 0
 
     def check_robot_on_target(self):
         active_chip_id = self.db.select_where_from_table('chips', ['chip_id'], {'game_id': self.game_id, 'revealed': 1},
@@ -226,25 +231,55 @@ class Game:
         chip_id = self.db.select_where_from_table('rounds', ['chip_id'], {'round_id': self.round_id},
                                                   single_result=True)
 
-        if self.active_player_id:
+        if self.active_player_id:  # if solution was found
             self.db.update_where_from_table('chips', {'revealed': 0, 'obtained_by_player_id': self.active_player_id},
                                             {'chip_id': chip_id})
+
+            # update db for player score
+            player_old_score = int(
+                self.db.select_where_from_table('players', ['score'], {'player_id': self.active_player_id},
+                                                single_result=True))
+            self.db.update_where_from_table('players', {'score': player_old_score + 1},
+                                            {'player_id': self.active_player_id})
+
+            # set robot home
+            for robot in self.robots:
+                robot_position = robot.get_position()
+                self.db.update_where_from_table('robots', {'home_position_column': robot_position['column'],
+                                                           'home_position_row': robot_position['row']},
+                                                {'robot_id': robot.robot_id})
+
+            # update db for round
+            self.db.update_where_from_table('rounds', {'best_solution': self.active_player_solution,
+                                                       'best_player_id': self.active_player_id},
+                                            {'round_id': self.round_id})
         else:
             self.db.update_where_from_table('chips', {'revealed': 0}, {'chip_id': chip_id})
 
+        # move robots to home
+        for robot in self.robots:
+            robot_home_position = \
+            self.db.select_where_from_table('robots', ['home_position_column', 'home_position_row'],
+                                            {'robot_id': robot.robot_id})[0]
+            self.db.update_where_from_table('robots', {'home_position_column': robot_home_position[0],
+                                                       'home_position_row': robot_home_position[1]},
+                                            {'robot_id': robot.robot_id})
+
         round_started_at: datetime = self.db.select_where_from_table('rounds', ['started_at'],
                                                                      {'round_id': self.round_id}, single_result=True)
-
         duration = datetime.now() - round_started_at
         duration = duration.seconds
-
         self.db.update_where_from_table('rounds', {'duration': duration}, {'round_id': self.round_id})
 
         self.active_player_id = None
         self.active_player_solution = None
 
-        self.db.update_where_from_table('robots', {'in_use': 0}, {'robot_id': self.selected_robot.robot_id})
-        self.selected_robot = None
+        if self.selected_robot:
+            self.db.update_where_from_table('robots', {'in_use': 0}, {'robot_id': self.selected_robot.robot_id})
+            self.selected_robot = None
+
+        self.hourglass.reset()
 
         self.reset_all_player_solutions()
+        self.set_global_ready_button_state(False)
         self.player_count_ready_for_round = 0
