@@ -93,9 +93,16 @@ class SQL:
         else:
             return result
 
-    def update_where_from_table(self, table_name, statement_value_pair_set: dict, statement_value_pairs_where: dict):
+    def update_where_from_table(self, table_name, statement_value_pairs_set: dict, statement_value_pairs_where: dict):
         query = f"UPDATE {table_name} " \
-                f"SET {list(statement_value_pair_set.keys())[0]} = {list(statement_value_pair_set.values())[0]} WHERE "
+                f"SET "
+
+        for i, (statement, value) in enumerate(statement_value_pairs_set.items()):
+            if i != 0:
+                query += ', '
+            query += f"{statement} = {value}".replace('\"', '\'')
+
+        query += " WHERE "
 
         for i, (statement, value) in enumerate(statement_value_pairs_where.items()):
             if i != 0:
