@@ -47,8 +47,23 @@ class Robot:
 
     def get_position(self) -> dict:
         column, row = \
-        self.db.select_where_from_table('robots', ['position_column', 'position_row'], {'robot_id': self.robot_id})[0]
+            self.db.select_where_from_table('robots', ['position_column', 'position_row'], {'robot_id': self.robot_id})[
+                0]
         return {'column': int(column), 'row': int(row)}
+
+    def set_position(self, _position: dict, grid, is_home=False) -> None:
+        key_column = 'position_column'
+        key_row = 'position_row'
+
+        if is_home:
+            key_column = 'home_' + key_column
+            key_row = 'home_' + key_row
+
+        self.db.update_where_from_table('robots', {key_column: _position['column'],
+                                                   key_row: _position['row']},
+                                        {'robot_id': self.robot_id})
+
+        self.current_node = grid[_position['row']][_position['column']]
 
     def create_obj_for_draw(self):
         color = Colors.robot[self.db.select_where_from_table('robots', ['color_name'],

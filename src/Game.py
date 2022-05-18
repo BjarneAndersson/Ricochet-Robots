@@ -188,7 +188,7 @@ class Game:
         self.active_player_id = self.get_best_player_id_in_round()
 
         if not self.active_player_id:
-            print('No one found a valid solution!\nSkipping target chip!')
+            print('Skipping target chip!')
             self.finish_round()
         else:
             self.active_player_solution = self.db.select_where_from_table('players', ['solution'],
@@ -224,6 +224,17 @@ class Game:
 
     def pass_active_status_on_to_next_player_in_solution_list(self):
         self.db.update_where_from_table('players', {'solution': -1}, {'player_id': self.active_player_id})
+        self.active_player_id = None
+        if self.selected_robot:
+            self.db.update_where_from_table('robots', {'in_use': 0}, {'robot_id': self.selected_robot.robot_id})
+            self.selected_robot = None
+        # move robots to home
+        for robot in self.robots:
+            robot_home_position = \
+                self.db.select_where_from_table('robots', ['home_position_column', 'home_position_row'],
+                                                {'robot_id': robot.robot_id})[0]
+            robot.set_position({'column': robot_home_position[0], 'row': robot_home_position[1]}, self.board.grid,
+                               is_home=False)
         self.solutions_review()
 
     def finish_round(self):
@@ -245,10 +256,7 @@ class Game:
 
             # set robot home
             for robot in self.robots:
-                robot_position = robot.get_position()
-                self.db.update_where_from_table('robots', {'home_position_column': robot_position['column'],
-                                                           'home_position_row': robot_position['row']},
-                                                {'robot_id': robot.robot_id})
+                robot.set_position(robot.get_position(), self.board.grid, is_home=True)
 
             # update db for round
             self.db.update_where_from_table('rounds', {'best_solution': self.active_player_solution,
@@ -260,11 +268,9 @@ class Game:
         # move robots to home
         for robot in self.robots:
             robot_home_position = \
-            self.db.select_where_from_table('robots', ['home_position_column', 'home_position_row'],
-                                            {'robot_id': robot.robot_id})[0]
-            self.db.update_where_from_table('robots', {'home_position_column': robot_home_position[0],
-                                                       'home_position_row': robot_home_position[1]},
-                                            {'robot_id': robot.robot_id})
+                self.db.select_where_from_table('robots', ['home_position_column', 'home_position_row'],
+                                                {'robot_id': robot.robot_id})[0]
+            robot.set_position({'column': robot_home_position[0], 'row': robot_home_position[1]}, self.board.grid)
 
         round_started_at: datetime = self.db.select_where_from_table('rounds', ['started_at'],
                                                                      {'round_id': self.round_id}, single_result=True)
