@@ -51,8 +51,11 @@ class Hourglass:
         self.start_timestamp = datetime.timestamp(datetime.now())
         self.active = True
 
-    def calc_passed_time(self):
-        current_timestamp = datetime.timestamp(datetime.now())
+    def calc_passed_time(self, datetime_now=None):
+        if datetime_now:
+            current_timestamp = datetime.timestamp(datetime_now)
+        else:
+            current_timestamp = datetime.timestamp(datetime.now())
         self.time_passed = current_timestamp - self.start_timestamp
         if self.time_passed >= self.max_time:
             self.time_passed = self.max_time
