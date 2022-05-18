@@ -348,10 +348,11 @@ def main():
 
         # check for game logics
         datetime_now = datetime.now()
-        if game.hourglass.active:
-            game.hourglass.calc_passed_time(datetime_now)
-        if game.hourglass.get_is_time_over() and not game.active_player_id:
-            game.solutions_review()
+        if game.is_round_active:
+            if game.hourglass.active:
+                game.hourglass.calc_passed_time(datetime_now)
+            if game.hourglass.get_is_time_over() and not game.active_player_id:
+                game.solutions_review()
 
 
 if __name__ == '__main__':
