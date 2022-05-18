@@ -18,7 +18,7 @@ class Robot:
         self.current_node = current_node
         self.current_node.is_robot = True
 
-    def move(self, direction: str) -> None:
+    def move(self, direction: str) -> bool:  # return True if the robot moved
         old_node = self.current_node
         if direction == 'up':
             while self.current_node.neighbors['top'] and not self.current_node.neighbors['top'].is_robot:
@@ -40,6 +40,10 @@ class Robot:
                                         {'robot_id': self.robot_id})
         self.db.update_where_from_table('robots', {'position_row': self.current_node.get_position()['row']},
                                         {'robot_id': self.robot_id})
+
+        if old_node == self.current_node:
+            return False
+        return True
 
     def get_position(self) -> dict:
         column, row = \

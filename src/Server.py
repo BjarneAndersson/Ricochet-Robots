@@ -147,7 +147,9 @@ def process_requests(data: str):
                                 return str(200).encode()
                         elif path[2] == 'move':  # 'GET game/robots/move'
                             if action == 'POST' and len(path) == 3:
-                                game.selected_robot.move(queries['direction'])
+                                is_moved = game.selected_robot.move(queries['direction'])
+                                if is_moved:
+                                    game.control_move_count += 1
                                 return str(200).encode()
 
                     elif path[1] == 'targets':
