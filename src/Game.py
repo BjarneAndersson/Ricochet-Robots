@@ -90,6 +90,8 @@ class Game:
         self.active_player_id: int = None
         self.active_player_solution: int = None
 
+        self.overall_player_count: int = 0
+
         self.control_move_count: int = 0
         self.selected_robot: Robot = None
 
@@ -148,10 +150,13 @@ class Game:
         return self.round_number
 
     def choose_rand_chip(self) -> int:  # return chip_id
-        all_available_chip_ids = [chip_id_tpl[0] for chip_id_tpl in
-                                  self.db.select_where_from_table('chips', ['chip_id'], {'game_id': self.game_id,
-                                                                                         'obtained_by_player_id': 0})]
-        return random.choice(all_available_chip_ids)
+        all_available_chip_ids_raw = self.db.select_where_from_table('chips', ['chip_id'], {'game_id': self.game_id,
+                                                                                            'obtained_by_player_id': 0})
+        if all_available_chip_ids_raw:
+            all_available_chip_ids = [chip_id_tpl[0] for chip_id_tpl in all_available_chip_ids_raw]
+            return random.choice(all_available_chip_ids)
+        else:
+            return None
 
     def reset_all_player_solutions(self) -> None:
         self.db.update_where_from_table('players', {'solution': -1}, {'game_id': self.game_id})
@@ -303,3 +308,36 @@ class Game:
         self.reset_all_player_solutions()
         self.set_global_ready_button_state(False)
         self.player_count_ready_for_round = 0
+
+        if not self.choose_rand_chip():
+            self.finish_game()
+
+    def get_best_player_id_in_game(self) -> int:
+        all_player_ids_and_scores_in_game: list = self.db.select_where_from_table('players',
+                                                                                  ['player_id', 'score'], {
+                                                                                      'game_id': self.game_id})  # get all player in game
+
+        all_player_ids_and_scores_in_game = list(
+            filter(lambda x: x[1] != -1,
+                   all_player_ids_and_scores_in_game))  # filter out player with a score of 0
+        all_player_ids_and_scores_in_game.sort(key=lambda x: x[1], reverse=True)  # sort after scores
+        best_player_id = all_player_ids_and_scores_in_game[0][0]
+        return best_player_id
+
+    def restart(self):
+        self.__init__(self.db, self.game_id + 1)
+
+    def finish_game(self):
+        self.db.update_where_from_table('games', {'player_count': self.overall_player_count}, {'game_id': self.game_id})
+
+        game_started_at: datetime = self.db.select_where_from_table('games', ['created_at'],
+                                                                    {'game_id': self.game_id}, single_result=True)
+        duration = datetime.now() - game_started_at
+        duration = duration.seconds
+        self.db.update_where_from_table('games', {'duration': duration}, {'game_id': self.game_id})
+
+        winner_player_id = self.get_best_player_id_in_game()
+        self.db.update_where_from_table('games', {'winner_player_id': winner_player_id}, {'game_id': self.game_id})
+
+        print('Game restarted')
+        self.restart()

@@ -355,6 +355,7 @@ def main():
             if key.data is None:
                 accept_wrapper(key.fileobj)
                 active_player_count += 1
+                game.overall_player_count += 1
                 db.update_where_from_table('games', {'player_count': active_player_count}, {'game_id': game_id})
                 game.ready = True if active_player_count >= 2 else False
             else:
