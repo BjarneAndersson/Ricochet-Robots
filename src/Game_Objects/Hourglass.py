@@ -45,7 +45,7 @@ class Hourglass:
         self.start_timestamp = None
         self.active = False
         self.time_passed = 0
-        self.max_time = 30
+        self.max_time = 5
 
     def start_timer(self):
         self.start_timestamp = datetime.timestamp(datetime.now())
@@ -74,8 +74,6 @@ class Hourglass:
         return self.time_passed == self.max_time
 
     def create_obj_for_draw(self):
-        if self.active:
-            self.calc_passed_time()
         percentage_of_fill = self.time_passed / self.max_time
         obj_hourglass_draw = HourglassDraw(self.position, self.size, percentage_of_fill)
         return obj_hourglass_draw

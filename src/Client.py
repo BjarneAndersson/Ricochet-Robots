@@ -8,6 +8,7 @@ from Helpers import Colors
 from Network import Network
 
 import pygame
+import pygame.freetype
 
 window: pygame.display
 network: Network
@@ -137,14 +138,14 @@ def main():
 
                     # check: mouse click on the grid
                     if is_position_on_grid(mouse_position):
-                        if network.send("GET game/hourglass/time_over"):
+                        if network.send("GET game/round/phase/move_robots"):
                             if player_id == network.send('GET user/active_player_id'):  # check: select robot
                                 network.send(
                                     f"POST game/robots/select?position_x={mouse_position['x']}&position_y={mouse_position['y']}")
 
                     # check: mouse click on client input field
                     elif is_position_on_input_field(mouse_position):
-                        if network.send("GET game/round/active") and not network.send("GET game/hourglass/time_over"):
+                        if network.send("GET game/round/phase/collect_solutions"):
                             if individual_solution.input_field.active:
                                 individual_solution.input_field.set_active_state(False)
                             else:

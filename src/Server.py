@@ -11,6 +11,7 @@ import types
 import pyperclip
 
 from datetime import datetime
+from enum import Enum, auto
 
 from Game import Game
 from Helpers import Colors
@@ -18,10 +19,23 @@ from SQL import SQL
 
 sel = selectors.DefaultSelector()
 
+
+class Phases(Enum):
+    PRE_GAME = auto()
+    PRE_ROUND = auto()
+    ROUND_STARTED = auto()  # chip revealed | no solution yet
+    ROUND_COLLECT_SOLUTIONS = auto()
+    ROUND_EVALUATE_ACTIVE_PLAYER = auto()
+    ROUND_ACTIVE_PLAYER_SHOWS_SOLUTION = auto()
+    ROUND_FINISH = auto()
+    GAME_FINISH = auto()
+
+
 db: SQL
 active_player_count: int = 0
 overall_player_count: int = 0
 game: Game = None
+phase: Phases = Phases.PRE_GAME
 
 
 # ---------------------------------------------------------MAIN---------------------------------------------------------
@@ -31,6 +45,7 @@ def main():
     global db
     global active_player_count, overall_player_count
     global game
+    global phase
 
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
@@ -51,8 +66,6 @@ def main():
 
     db = SQL("localhost", "root", "")
 
-    create_new_game()
-
     clear_unnecessary_data_in_db()
 
     print(f'Server Started\nIP: {ip_address} | Port: {port}\n')
@@ -62,12 +75,55 @@ def main():
 
     while True:
         # check: events for game logics
-        datetime_now = datetime.now()
-        if game.is_round_active:
-            if game.hourglass.active:
-                game.hourglass.calc_passed_time(datetime_now)
-            if game.hourglass.get_is_time_over() and not game.active_player_id:
-                game.solutions_review()
+        if phase == Phases.PRE_GAME:
+            create_new_game()
+            phase = Phases.PRE_ROUND
+
+        elif phase == Phases.PRE_ROUND:
+            if game.get_is_round_ready():
+                phase = Phases.ROUND_STARTED
+                game.start_round()
+
+        elif phase == Phases.ROUND_STARTED:
+            # check: sb. submitted a solution
+            all_solutions_in_game = [solution_tpl[0] for solution_tpl in
+                                     db.select_where_from_table('players', ['solution'], {'game_id': game.game_id})]
+            all_valid_solutions = list(filter(lambda x: x != -1, all_solutions_in_game))
+
+            if all_valid_solutions:  # if there is a valid submitted solution
+                game.hourglass.start_timer()
+                phase = Phases.ROUND_COLLECT_SOLUTIONS
+
+        elif phase == Phases.ROUND_COLLECT_SOLUTIONS:
+            game.hourglass.calc_passed_time()
+            if game.hourglass.get_is_time_over():
+                phase = Phases.ROUND_EVALUATE_ACTIVE_PLAYER
+
+        elif phase == Phases.ROUND_EVALUATE_ACTIVE_PLAYER:
+            game.active_player_id = game.get_best_player_id_in_round()
+            if not game.active_player_id:
+                print('Skipping target chip!')
+                phase = Phases.ROUND_FINISH
+            else:
+                game.active_player_solution = db.select_where_from_table('players', ['solution'],
+                                                                         {'player_id': game.active_player_id},
+                                                                         single_result=True)
+                phase = Phases.ROUND_ACTIVE_PLAYER_SHOWS_SOLUTION
+
+        elif phase == Phases.ROUND_ACTIVE_PLAYER_SHOWS_SOLUTION:
+            if game.control_move_count <= game.active_player_solution:
+                if game.check_robot_on_target():
+                    phase = Phases.ROUND_FINISH
+            else:
+                phase = Phases.ROUND_EVALUATE_ACTIVE_PLAYER
+                game.pass_active_status_on_to_next_player_in_solution_list()
+
+        elif phase == Phases.ROUND_FINISH:
+            game.finish_round()
+            phase = Phases.PRE_ROUND if game.are_chips_without_solution() else Phases.GAME_FINISH
+
+        elif phase == Phases.GAME_FINISH:
+            finish_game()
 
         # check: incoming data from connections
         events = sel.select(timeout=None)
@@ -77,7 +133,7 @@ def main():
                 active_player_count += 1
                 overall_player_count += 1
                 db.update_where_from_table('games', {'player_count': active_player_count}, {'game_id': game.game_id})
-                game.ready = True if active_player_count >= 2 else False
+                game.ready = True if active_player_count >= 1 else False
             else:
                 service_connection(key, mask)
 
@@ -181,9 +237,13 @@ def process_requests(data: str) -> bytes:
                                     {'x': game.board.rect.centerx, 'y': game.board.rect.centery})
 
                     elif path[1] == 'round':
-                        if path[2] == 'active':  # GET game/round/active
-                            if len(path) == 3:
-                                return pickle.dumps(game.is_round_active)
+                        if path[2] == 'phase':
+                            if path[3] == 'collect_solutions':  # GET game/round/phase/collect_solutions
+                                if len(path) == 4:
+                                    return pickle.dumps(phase in [Phases.ROUND_STARTED, Phases.ROUND_COLLECT_SOLUTIONS])
+                            elif path[3] == 'move_robots':  # GET game/round/phases/move_robots
+                                if len(path) == 4:
+                                    return pickle.dumps(phase == Phases.ROUND_ACTIVE_PLAYER_SHOWS_SOLUTION)
 
                     elif path[1] == 'robots':
                         if len(path) == 2:  # 'GET game/robots'
@@ -239,6 +299,10 @@ def process_requests(data: str) -> bytes:
                     elif path[1] == 'window_dimensions':
                         if len(path) == 2:
                             return pickle.dumps(game.window_dimensions)
+
+                    elif path[1] == 'field_size':
+                        if len(path) == 2:
+                            return pickle.dumps(game.FIELD_SIZE)
             elif path[0] == 'user':
                 if path[1] == 'active_player_id':
                     if len(path) == 2:
@@ -291,15 +355,11 @@ def process_requests(data: str) -> bytes:
                             return str(200).encode()
                     elif path[2] == 'move':  # 'GET game/robots/move'
                         if len(path) == 3:
-                            is_moved = game.selected_robot.move(queries['direction'])
-                            if is_moved:
-                                game.control_move_count += 1
-                                if game.control_move_count <= game.active_player_solution:
-                                    if game.check_robot_on_target():
-                                        game.finish_round()
-                                else:
-                                    game.pass_active_status_on_to_next_player_in_solution_list()
-                            return str(200).encode()
+                            if phase == Phases.ROUND_ACTIVE_PLAYER_SHOWS_SOLUTION:
+                                is_moved = game.selected_robot.move(queries['direction'])
+                                if is_moved:
+                                    game.control_move_count += 1
+                                return str(200).encode()
 
             elif path[0] == 'user':
                 if path[1] == 'new':  # 'POST user/new?name=x'
@@ -312,34 +372,30 @@ def process_requests(data: str) -> bytes:
 
                     if path[2] == 'solution':
                         if len(path) == 3:  # 'POST user/<n>/solution?value=x'
-                            solution = queries['value']
-                            db.update_where_from_table('players', {'solution': solution}, {'player_id': player_id})
-                            if not game.hourglass.get_is_active():
-                                game.hourglass.start_timer()
-                            return str.encode(str(200))
+                            if phase in [Phases.ROUND_STARTED, Phases.ROUND_COLLECT_SOLUTIONS]:
+                                solution = queries['value']
+                                db.update_where_from_table('players', {'solution': solution}, {'player_id': player_id})
+                                return str(200).encode()
+                            else:
+                                return str(400).encode()
 
                     elif path[2] == 'change_status_next_round':  # 'POST user/{id}/change_status_next_round'
                         if len(path) == 3:
-                            if not game.is_round_active:
-                                old_status = bool(db.select_where_from_table('players', ['ready_for_round'],
-                                                                             {'player_id': player_id},
-                                                                             single_result=True))
-                                new_status = not old_status
-                                if new_status:  # player wasn't ready
-                                    db.update_where_from_table('players', {'ready_for_round': 1},
+                            if game.ready:
+                                current_status = bool(db.select_where_from_table('players', ['ready_for_round'],
+                                                                                 {'player_id': player_id},
+                                                                                 single_result=True))
+                                if phase == Phases.PRE_ROUND:
+                                    new_status = not current_status
+                                    db.update_where_from_table('players', {'ready_for_round': int(new_status)},
                                                                {'player_id': player_id})
-                                    game.player_count_ready_for_round += 1
-                                    if game.get_is_round_ready():
-                                        game.start_round()
+                                    return pickle.dumps(new_status)
                                 else:
-                                    db.update_where_from_table('players', {'ready_for_round': 0},
-                                                               {'player_id': player_id})
-                                    game.player_count_ready_for_round -= 1
+                                    return pickle.dumps(current_status)
                             else:
-                                new_status = True
-                            return pickle.dumps(new_status)
+                                return pickle.dumps(False)
 
-            print(f"Request not implemented: {data}")
+        print(f"Request not implemented: {data}")
 
     except OSError as socket_error:
         print(str(socket_error))
@@ -347,22 +403,6 @@ def process_requests(data: str) -> bytes:
 
 
 # ---------------------------------------------------------LOGIC--------------------------------------------------------
-
-
-def clear_unnecessary_data_in_db() -> None:  # delete rows in chips, robots, rounds where there's a winner in the game
-    request_result = db.select_where_from_table('games', ['game_id'], {'winner_player_id': 'NULL'},
-                                                comparison_symbol='<>')
-    request_result = list(range(134, game.game_id))
-    if request_result is None:
-        return
-    else:
-        # finished_game_ids = [game_id_tpl[0] for game_id_tpl in request_result]
-        finished_game_ids = request_result
-        for c_game_id in finished_game_ids:
-            db.delete_where_from_table('chips', {'game_id': c_game_id})
-            db.delete_where_from_table('robots', {'game_id': c_game_id})
-            db.delete_where_from_table('rounds', {'game_id': c_game_id})
-        print(f"Cleared tables of game_ids: {finished_game_ids}")
 
 
 def create_new_game() -> None:
@@ -375,8 +415,20 @@ def create_new_game() -> None:
     print(f'New game created!\n')
 
 
-def start_round():
-    game.start_round()
+def clear_unnecessary_data_in_db() -> None:  # delete rows in chips, robots, rounds where there's a winner in the game
+    global db, game
+
+    request_result = db.select_where_from_table('games', ['game_id'], {'winner_player_id': 'NULL'},
+                                                comparison_symbol='<>')
+    if request_result is None:
+        return
+    else:
+        finished_game_ids = [game_id_tpl[0] for game_id_tpl in request_result]
+        for c_game_id in finished_game_ids:
+            db.delete_where_from_table('chips', {'game_id': c_game_id})
+            db.delete_where_from_table('robots', {'game_id': c_game_id})
+            db.delete_where_from_table('rounds', {'game_id': c_game_id})
+        print(f"Cleared tables of game_ids: {finished_game_ids}")
 
 
 def finish_game():

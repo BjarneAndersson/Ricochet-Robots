@@ -23,31 +23,33 @@ class Game:
         self.round_id: int = None
         self.ready: bool = False
 
-        # initialisation of server game objects
-        self.board: Board = None
-        self.menu: Menu = None
-        self.hourglass: Hourglass = None
-        self.best_solution: BestSolution = None
-        self.leaderboard: Leaderboard = None
-        self.robots: list = self.create_robots()
-
-        # declare position and size of client game objects
-        self.individual_solution: dict = None
-        self.ready_button: dict = None
-
         # window initialisation
         self.board_offset: dict = {'top': self.FIELD_SIZE // 2,
                                    'bottom': self.FIELD_SIZE // 2 + 3 * self.FIELD_SIZE + self.FIELD_SIZE // 2,
                                    'left': self.FIELD_SIZE // 2 + 1 * self.FIELD_SIZE + self.FIELD_SIZE // 2,
                                    'right': self.FIELD_SIZE // 2 + 5 * self.FIELD_SIZE + self.FIELD_SIZE // 2}
 
+        # initialisation of server game objects
+        self.board: Board = None
+        self.menu: Menu = None
+        self.hourglass: Hourglass = None
+        self.best_solution: BestSolution = None
+        self.leaderboard: Leaderboard = None
+        self.initialize_game_objects_server()
+        self.robots: list = self.create_robots()
+
+        # declare position and size of client game objects
+        self.individual_solution: dict = None
+        self.ready_button: dict = None
+        self.initialize_game_objects_client()
+
         self.window_dimensions = (
             self.board_offset['left'] + self.board.rect.width + self.board_offset['right'],
             self.board_offset['top'] + self.board.rect.height + self.board_offset['bottom'])
 
+
         # variables needed for rounds
         self.is_round_active: bool = False
-        self.player_count_ready_for_round: int = 0
         self.round_number: int = 0
         self.active_player_id: int = None
         self.active_player_solution: int = None
@@ -89,12 +91,10 @@ class Game:
 
         self.best_solution = BestSolution(self.db, self.game_id,
                                           {'x': self.FIELD_SIZE // 2 + self.hourglass.size[
-                                              'width'] + self.FIELD_SIZE // 2 + self.individual_solution['size'][
-                                                    'width'] + self.FIELD_SIZE // 2 + self.ready_button['size'][
-                                                    'width'] + self.FIELD_SIZE // 2,
+                                              'width'] + self.FIELD_SIZE // 2 + 5 * self.FIELD_SIZE + self.FIELD_SIZE // 2 + 5 * self.FIELD_SIZE + self.FIELD_SIZE // 2,
                                            'y': self.board_offset['top'] + self.board.size[
                                                'height'] + self.FIELD_SIZE // 2},
-                                          self.individual_solution['size'])
+                                          {'width': 5 * self.FIELD_SIZE, 'height': 3 * self.FIELD_SIZE})
 
     def initialize_game_objects_client(self):
         self.individual_solution = {
@@ -144,44 +144,57 @@ class Game:
 
     # ------------------------------------------------------------------------------------------------------------------
 
-    def get_is_round_ready(self) -> bool:
-        return self.player_count_ready_for_round >= self.db.select_where_from_table('games', ['player_count'],
-                                                                                    {'game_id': self.game_id},
-                                                                                    single_result=True) // 2
-
-    def get_new_round_number(self):
-        self.round_number += 1
-        return self.round_number
-
-    def choose_rand_chip(self) -> int:  # return chip_id
-        all_available_chip_ids_raw = self.db.select_where_from_table('chips', ['chip_id'], {'game_id': self.game_id,
-                                                                                            'obtained_by_player_id': 0})
-        if all_available_chip_ids_raw:
-            all_available_chip_ids = [chip_id_tpl[0] for chip_id_tpl in all_available_chip_ids_raw]
-            return random.choice(all_available_chip_ids)
-        else:
-            return None
-
-    def reset_all_player_solutions(self) -> None:
-        self.db.update_where_from_table('players', {'solution': -1}, {'game_id': self.game_id})
-
     def check_if_new_draw_objects_should_be_created(self) -> bool:
         current_datetime = datetime.now()
         dif = current_datetime - self.last_creation_of_draw_objects
         dif_micro = dif.seconds * 10 ** 6 + dif.microseconds
-        if dif_micro >= 10 ** 6 / 30:
+        if dif_micro >= 10 ** 6 / self.game_tick_rate:
             self.last_creation_of_draw_objects = datetime.now()
             self.create_new_draw_objects()
             return True
         return False
 
-    def create_new_draw_objects(self):
+    def create_new_draw_objects(self) -> None:
         self.grid_draw = [[node.create_obj_for_draw() for node in row] for row in self.board.grid]
         self.robots_draw = [robot.create_obj_for_draw() for robot in self.robots]
         self.targets_draw = [target.create_obj_for_draw() for target in self.board.targets]
         self.hourglass_draw = self.hourglass.create_obj_for_draw()
         self.leaderboard_draw = self.leaderboard.create_obj_for_draw()
         self.best_solution_draw = self.best_solution.create_obj_for_draw()
+
+    # ------------------------------------------------------------------------------------------------------------------
+
+    def get_is_round_ready(self) -> bool:
+        player_count_ready_for_round_raw = self.db.select_where_from_table('players', ['player_id'],
+                                                                           {'game_id': self.game_id,
+                                                                            'ready_for_round': 1})
+        if not player_count_ready_for_round_raw:
+            return False
+        player_count_ready_for_round = len([player_id_tpl[0] for player_id_tpl in player_count_ready_for_round_raw])
+        return self.ready and player_count_ready_for_round >= self.db.select_where_from_table('games', ['player_count'],
+                                                                                              {'game_id': self.game_id},
+                                                                                              single_result=True) // 2
+
+    def get_new_round_number(self) -> int:
+        self.round_number += 1
+        return self.round_number
+
+    def are_chips_without_solution(self) -> bool:
+        all_available_chip_ids_raw = self.db.select_where_from_table('chips', ['chip_id'], {'game_id': self.game_id,
+                                                                                            'obtained_by_player_id': 0})
+        return bool(all_available_chip_ids_raw)
+
+    def choose_rand_chip(self) -> int:  # return chip_id
+        if not self.are_chips_without_solution():
+            return None
+
+        all_available_chip_ids_raw = self.db.select_where_from_table('chips', ['chip_id'], {'game_id': self.game_id,
+                                                                                            'obtained_by_player_id': 0})
+        all_available_chip_ids = [chip_id_tpl[0] for chip_id_tpl in all_available_chip_ids_raw]
+        return random.choice(all_available_chip_ids)
+
+    def reset_all_player_solutions(self) -> None:
+        self.db.update_where_from_table('players', {'solution': -1}, {'game_id': self.game_id})
 
     def set_global_ready_button_state(self, state_pressed):
         self.db.update_where_from_table('players', {'ready_for_round': int(state_pressed)}, {'game_id': self.game_id})
@@ -192,45 +205,35 @@ class Game:
         # insert round
         self.db.insert('rounds', {'game_id': self.game_id, 'round_number': self.get_new_round_number(),
                                   'chip_id': self.choose_rand_chip()})
-        # get round_id
+
         self.round_id = self.db.select_where_from_table('rounds', ['round_id'],
                                                         {'game_id': self.game_id, 'round_number': self.round_number},
                                                         single_result=True)
 
-        self.reset_all_player_solutions()
-
         chip_id = self.db.select_where_from_table('rounds', ['chip_id'], {'round_id': self.round_id},
                                                   single_result=True)
+        # update db - reveal chip
         self.db.update_where_from_table('chips', {'revealed': 1}, {'chip_id': chip_id})
 
         self.set_global_ready_button_state(True)
 
-    def solutions_review(self):
-        self.active_player_id = self.get_best_player_id_in_round()
-
-        if not self.active_player_id:
-            print('Skipping target chip!')
-            self.finish_round()
-        else:
-            self.active_player_solution = self.db.select_where_from_table('players', ['solution'],
-                                                                          {'player_id': self.active_player_id},
-                                                                          single_result=True)
-            self.control_move_count = 0
-
     def check_robot_on_target(self):
-        active_chip_id, chip_color_name = \
-        self.db.select_where_from_table('chips', ['chip_id', 'color_name'], {'game_id': self.game_id, 'revealed': 1})[0]
-        active_chip_position_raw = \
-        self.db.select_where_from_table('chips', ['position_column', 'position_row'], {'chip_id': active_chip_id})[0]
-        active_chip_position = {'column': active_chip_position_raw[0], 'row': active_chip_position_raw[1]}
+        if self.selected_robot:
+            active_chip_id, chip_color_name = \
+                self.db.select_where_from_table('chips', ['chip_id', 'color_name'],
+                                                {'game_id': self.game_id, 'revealed': 1})[0]
+            active_chip_position_raw = \
+                self.db.select_where_from_table('chips', ['position_column', 'position_row'],
+                                                {'chip_id': active_chip_id})[0]
+            active_chip_position = {'column': active_chip_position_raw[0], 'row': active_chip_position_raw[1]}
 
-        robot_color_name = self.db.select_where_from_table('robots', ['color_name'],
-                                                           {'robot_id': self.selected_robot.robot_id},
-                                                           single_result=True)
-        active_robot_position = self.selected_robot.get_position()
+            robot_color_name = self.db.select_where_from_table('robots', ['color_name'],
+                                                               {'robot_id': self.selected_robot.robot_id},
+                                                               single_result=True)
+            active_robot_position = self.selected_robot.get_position()
 
-        if active_chip_position == active_robot_position and chip_color_name == robot_color_name:
-            return True
+            if active_chip_position == active_robot_position and chip_color_name == robot_color_name:
+                return True
         return False
 
     def get_best_player_id_in_round(self) -> int:
@@ -253,6 +256,7 @@ class Game:
         if self.selected_robot:
             self.db.update_where_from_table('robots', {'in_use': 0}, {'robot_id': self.selected_robot.robot_id})
             self.selected_robot = None
+
         # move robots to home
         for robot in self.robots:
             robot_home_position = \
@@ -260,7 +264,6 @@ class Game:
                                                 {'robot_id': robot.robot_id})[0]
             robot.set_position({'column': robot_home_position[0], 'row': robot_home_position[1]}, self.board.grid,
                                is_home=False)
-        self.solutions_review()
 
     def finish_round(self):
         self.is_round_active = False
@@ -272,7 +275,7 @@ class Game:
             self.db.update_where_from_table('chips', {'revealed': 0, 'obtained_by_player_id': self.active_player_id},
                                             {'chip_id': chip_id})
 
-            # update db for player score
+            # update db - player score
             player_old_score = int(
                 self.db.select_where_from_table('players', ['score'], {'player_id': self.active_player_id},
                                                 single_result=True))
@@ -314,7 +317,7 @@ class Game:
 
         self.reset_all_player_solutions()
         self.set_global_ready_button_state(False)
-        self.player_count_ready_for_round = 0
+        self.control_move_count = 0
 
         if not self.choose_rand_chip():
             self.finish_game()
