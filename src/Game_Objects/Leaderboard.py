@@ -129,21 +129,21 @@ class Leaderboard:
 
         return final_player_ids
 
-    def get_all_targets_which_the_player_has_obtained(self, player_id):
+    def get_all_target_ids_which_the_player_has_obtained(self, player_id):
         target_ids = [target_id_tpl[0] for target_id_tpl in
                       self.db.select_where_from_table('chips', ['chip_id'], {'obtained_by_player_id': player_id})]
         return target_ids
 
     def create_obj_for_draw(self):
-        entries = []
-        scored_player_ids = self.get_all_players_who_have_scored()
+        entries: list = []
+        scored_player_ids: list = self.get_all_players_who_have_scored()
 
         if scored_player_ids:
             for player_id in scored_player_ids:
                 name, score = self.db.select_where_from_table('players', ['name', 'score'], {'player_id': player_id})[0]
-                target_ids_obtained_by_player = self.get_all_targets_which_the_player_has_obtained(player_id)
-                target_draw_objects: list = []
 
+                target_ids_obtained_by_player = self.get_all_target_ids_which_the_player_has_obtained(player_id)
+                target_draw_objects: list = []
                 for target in self.targets:
                     if target.chip_id in target_ids_obtained_by_player:
                         target_draw_objects.append(target.create_obj_for_draw())
