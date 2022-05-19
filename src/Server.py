@@ -92,44 +92,120 @@ def process_requests(data: str):
 
             game.check_if_new_draw_objects_should_be_created()
 
-            if path[0] == 'game':
-                if action == 'GET' and len(path) == 1:  # 'GET game'
-                    return pickle.dumps(game)
-                else:
-                    if path[1] == 'board':
-                        if path[2] == 'grid':
-                            if action == 'GET':  # 'GET game/board/grid'
-                                return pickle.dumps(game.grid_draw)
-                        elif path[2] == 'offset':
-                            if action == 'GET':  # 'GET game/board/offset'
-                                return pickle.dumps(game.board_offset)
-                        elif path[2] == 'rect':  # 'GET game/board/rect'
-                            if action == 'GET':
-                                return pickle.dumps(game.board.rect)
-                        if len(queries) != 0:
-                            if queries['position'] == 'center':  # 'GET game/board?&position=center'
-                                return pickle.dumps(
-                                    {'x': game.board.rect.centerx, 'y': game.board.rect.centery})
+            if action == 'GET':
+                if path[0] == 'game':
+                    if len(path) == 1:  # 'GET game'
+                        return pickle.dumps(game)
+                    else:
+                        if path[1] == 'board':
+                            if path[2] == 'grid':  # 'GET game/board/grid'
+                                if len(path) == 3:
+                                    return pickle.dumps(game.grid_draw)
+                            elif path[2] == 'offset':  # 'GET game/board/offset'
+                                if len(path) == 3:
+                                    return pickle.dumps(game.board_offset)
+                            elif path[2] == 'rect':  # 'GET game/board/rect'
+                                if len(path) == 3:
+                                    return pickle.dumps(game.board.rect)
+                            if queries:
+                                if queries['position'] == 'center':  # 'GET game/board?&position=center'
+                                    return pickle.dumps(
+                                        {'x': game.board.rect.centerx, 'y': game.board.rect.centery})
 
-                    elif path[1] == 'field_size':
-                        if action == 'GET':
-                            return pickle.dumps(game.FIELD_SIZE)
+                        elif path[1] == 'round':
+                            if path[2] == 'active':  # GET game/round/active
+                                if len(path) == 3:
+                                    return pickle.dumps(game.is_round_active)
 
-                    elif path[1] == 'round':
-                        if path[2] == 'active':  # GET game/round/active
-                            if action == 'GET':
-                                return pickle.dumps(game.is_round_active)
+                        elif path[1] == 'robots':
+                            if len(path) == 2:  # 'GET game/robots'
+                                return pickle.dumps(game.robots_draw)
+                            elif path[2] == 'select':  # 'GET game/robots/select'
+                                if len(path) == 3:
+                                    if game.selected_robot:
+                                        return pickle.dumps(game.selected_robot.robot_id)
+                                    else:
+                                        return pickle.dumps(None)
 
-                    elif path[1] == 'robots':
-                        if action == 'GET' and len(path) == 2:  # 'GET game/robots'
-                            return pickle.dumps(game.robots_draw)
-                        elif path[2] == 'select':
-                            if action == 'GET' and len(path) == 3:
-                                if game.selected_robot:
-                                    return pickle.dumps(game.selected_robot.robot_id)
-                                else:
-                                    return pickle.dumps(None)
-                            elif action == 'POST' and len(path) == 3:
+                        elif path[1] == 'targets':
+                            if len(path) == 2:  # 'GET game/targets'
+                                return pickle.dumps(game.targets_draw)
+
+                        elif path[1] == 'hourglass':
+                            if len(path) == 2:  # 'GET game/hourglass'
+                                return pickle.dumps(game.hourglass_draw)
+                            elif path[2] == 'time_over':  # GET game/hourglass/time_over
+                                if len(path) == 3:
+                                    return pickle.dumps(game.hourglass.get_is_time_over())
+
+                        elif path[1] == 'leaderboard':
+                            if len(path) == 2:  # 'GET game/leaderboard'
+                                return pickle.dumps(game.leaderboard_draw)
+
+                        elif path[1] == 'best_solution':
+                            if len(path) == 2:  # 'GET game/best_solution'
+                                return pickle.dumps(game.best_solution_draw)
+
+                        elif path[1] == 'individual_solution':
+                            if path[2] == 'position':  # 'GET game/individual_solution/position'
+                                if len(path) == 3:
+                                    return pickle.dumps(game.individual_solution['position'])
+                            elif path[2] == 'size':  # 'GET game/individual_solution/size'
+                                if len(path) == 3:
+                                    return pickle.dumps(game.individual_solution['size'])
+
+                        elif path[1] == 'ready_button':
+                            if path[2] == 'state':  # 'GET game/ready_button/state'
+                                if len(path) == 3:
+                                    if game.is_round_active:
+                                        return 'pressed'.encode()
+                                    else:
+                                        return 'unpressed'.encode()
+                            elif path[2] == 'position':  # 'GET game/ready_button/position'
+                                if len(path) == 3:
+                                    return pickle.dumps(game.ready_button['position'])
+                            elif path[2] == 'size':  # 'GET game/ready_button/size'
+                                if len(path) == 3:
+                                    return pickle.dumps(game.ready_button['size'])
+
+                        elif path[1] == 'window_dimensions':
+                            if len(path) == 2:
+                                return pickle.dumps(game.window_dimensions)
+                elif path[0] == 'user':
+                    if path[1] == 'active_player_id':
+                        if len(path) == 2:
+                            return pickle.dumps(game.active_player_id)
+                    else:  # player specific request
+                        player_id = int(path[1])
+
+                        if path[2] == 'name':  # 'GET user/<n>/name'
+                            if len(path) == 3:
+                                name = db.select_where_from_table("players", ["name"], {"player_id": player_id},
+                                                                  single_result=True)
+                                return str(name).encode()
+                        elif path[2] == 'solution':  # 'GET user/<n>/solution'
+                            if len(path) == 3:
+                                solution = db.select_where_from_table("players", ["solution"], {"player_id": player_id},
+                                                                      single_result=True)
+                                return str(solution).encode()
+
+                        elif path[2] == 'ready_button':
+                            if path[3] == 'state':  # 'GET user/<n>/ready_button/state'
+                                if len(path) == 4:
+                                    return pickle.dumps(
+                                        bool(int(db.select_where_from_table('players', ['ready_for_round'],
+                                                                            {'player_id': player_id},
+                                                                            single_result=True))))
+
+                elif path[0] == 'colors':
+                    if len(path) == 1:  # 'GET colors'
+                        return pickle.dumps(Colors)
+
+            else:  # action == 'POST'
+                if path[0] == 'game':
+                    if path[1] == 'robots':
+                        if path[2] == 'select':  # 'POST game/robots/select?position_x=x&position_y=y
+                            if len(path) == 3:
                                 if game.selected_robot:
                                     db.update_where_from_table('robots', {'in_use': 0},
                                                                {'robot_id': game.selected_robot.robot_id})
@@ -138,7 +214,8 @@ def process_requests(data: str):
                                 grid_position = node_at_position.get_position()
                                 try:
                                     game.selected_robot = [robot for robot in game.robots if
-                                                           robot.get_position()['column'] == grid_position['column'] and
+                                                           robot.get_position()['column'] == grid_position[
+                                                               'column'] and
                                                            robot.get_position()['row'] == grid_position['row']][0]
                                     db.update_where_from_table('robots', {'in_use': 1},
                                                                {'robot_id': game.selected_robot.robot_id})
@@ -146,7 +223,7 @@ def process_requests(data: str):
                                     game.selected_robot = None
                                 return str(200).encode()
                         elif path[2] == 'move':  # 'GET game/robots/move'
-                            if action == 'POST' and len(path) == 3:
+                            if len(path) == 3:
                                 is_moved = game.selected_robot.move(queries['direction'])
                                 if is_moved:
                                     game.control_move_count += 1
@@ -157,131 +234,60 @@ def process_requests(data: str):
                                         game.pass_active_status_on_to_next_player_in_solution_list()
                                 return str(200).encode()
 
-                    elif path[1] == 'targets':
-                        if action == 'GET' and len(path) == 2:  # 'GET game/targets'
-                            return pickle.dumps(game.targets_draw)
-
-                    elif path[1] == 'hourglass':
-                        if action == 'GET' and len(path) == 2:  # 'GET game/hourglass'
-                            return pickle.dumps(game.hourglass_draw)
-                        elif path[2] == 'time_over':  # GET game/hourglass/time_over
-                            return pickle.dumps(game.hourglass.get_is_time_over())
-
-                    elif path[1] == 'leaderboard':
-                        if action == 'GET' and len(path) == 2:  # 'GET game/leaderboard'
-                            return pickle.dumps(game.leaderboard_draw)
-
-                    elif path[1] == 'best_solution':
-                        if action == 'GET' and len(path) == 2:  # 'GET game/best_solution'
-                            return pickle.dumps(game.best_solution_draw)
-
-                    elif path[1] == 'menu':
-                        if path[2] == 'button':
-                            if action == 'GET' and len(path) == 3:  # 'GET game/menu/button'
-                                return pickle.dumps(game.menu.button)
-
-                    elif path[1] == 'individual_solution':
-                        if path[2] == 'position':  # 'GET game/individual_solution/position'
-                            if action == 'GET' and len(path) == 3:
-                                return pickle.dumps(game.individual_solution['position'])
-                        elif path[2] == 'size':  # 'GET game/individual_solution/size'
-                            if action == 'GET':
-                                return pickle.dumps(game.individual_solution['size'])
-
-                    elif path[1] == 'ready_button':
-                        if path[2] == 'state':  # 'GET game/ready_button/state'
-                            if action == 'GET' and len(path) == 3:
-                                if game.is_round_active:
-                                    return 'pressed'.encode()
-                                else:
-                                    return 'unpressed'.encode()
-                        elif path[2] == 'position':  # 'GET game/ready_button/position'
-                            if action == 'GET' and len(path) == 3:
-                                return pickle.dumps(game.ready_button['position'])
-                        elif path[2] == 'size':  # 'GET game/ready_button/size'
-                            if action == 'GET':
-                                return pickle.dumps(game.ready_button['size'])
-
-                    elif path[1] == 'window_dimensions':
-                        if action == 'GET':
-                            return pickle.dumps(game.window_dimensions)
-
-                    elif path[1] == 'reset':
-                        game.reset()
+                elif path[0] == 'user':
+                    if path[1] == 'new':  # 'POST user/new?name=x'
+                        if len(path) == 2:
+                            db.insert('players', {'game_id': game_id,
+                                                  'name': queries['name']})
+                            return str.encode("200")
                     else:
-                        print(f"No action: {path[1]}")
-            elif path[0] == 'user':
+                        player_id = int(path[1])
 
-                if path[1] == 'new':
-                    if action == 'POST':
-                        db.insert('players', {'game_id': game_id,
-                                              'name': queries['name']})
-                        return str.encode("200")
-                elif path[1] == 'active_player_id':
-                    if action == 'GET' and len(path) == 2:
-                        return pickle.dumps(game.active_player_id)
-                else:
-                    player_id = int(path[1])
+                        if path[2] == 'solution':
+                            if len(path) == 3:  # 'POST user/<n>/solution?value=x'
+                                solution = queries['value']
+                                db.update_where_from_table('players', {'solution': solution}, {'player_id': player_id})
+                                if not game.hourglass.get_is_active():
+                                    game.hourglass.start_timer()
+                                return str.encode(str(200))
 
-                    if path[2] == 'name':
-                        if action == 'GET':
-                            name = db.select_where_from_table("players", ["name"], {"player_id": player_id},
-                                                              single_result=True)
-                            return str.encode(str(name))
-                        else:  # action == 'POST'
-                            # game.setUserName(player_id, name)
-                            pass
-                    elif path[2] == 'solution':
-                        if action == 'GET':
-                            solution = db.select_where_from_table("players", ["solution"], {"player_id": player_id},
-                                                                  single_result=True)
-                            return str.encode(str(solution))
-                        else:  # action == 'POST'
-                            solution = queries['value']
-                            db.update_where_from_table('players', {'solution': solution}, {'player_id': player_id})
-                            if not game.hourglass.get_is_active():
-                                game.hourglass.start_timer()
-                            return str.encode(str(200))
-
-                    elif path[2] == 'change_status_next_round':  # "POST user/{id}/change_status_next_round"
-                        if action == 'POST':
-                            if not game.is_round_active:
-                                old_status = bool(db.select_where_from_table('players', ['ready_for_round'],
-                                                                             {'player_id': player_id},
-                                                                             single_result=True))
-                                new_status = not old_status
-                                if new_status:  # player wasn't ready
-                                    db.update_where_from_table('players', {'ready_for_round': 1},
-                                                               {'player_id': player_id})
-                                    game.player_count_ready_for_round += 1
-                                    if game.get_is_round_ready():
-                                        game.start_round()
+                        elif path[2] == 'change_status_next_round':  # 'POST user/{id}/change_status_next_round'
+                            if len(path) == 3:
+                                if not game.is_round_active:
+                                    old_status = bool(db.select_where_from_table('players', ['ready_for_round'],
+                                                                                 {'player_id': player_id},
+                                                                                 single_result=True))
+                                    new_status = not old_status
+                                    if new_status:  # player wasn't ready
+                                        db.update_where_from_table('players', {'ready_for_round': 1},
+                                                                   {'player_id': player_id})
+                                        game.player_count_ready_for_round += 1
+                                        if game.get_is_round_ready():
+                                            game.start_round()
+                                    else:
+                                        db.update_where_from_table('players', {'ready_for_round': 0},
+                                                                   {'player_id': player_id})
+                                        game.player_count_ready_for_round -= 1
                                 else:
-                                    db.update_where_from_table('players', {'ready_for_round': 0},
-                                                               {'player_id': player_id})
-                                    game.player_count_ready_for_round -= 1
-                            else:
-                                new_status = True
-                            return pickle.dumps(new_status)
+                                    new_status = True
+                                return pickle.dumps(new_status)
 
-                    elif path[2] == 'ready_button':
-                        if path[3] == 'state':
-                            if action == 'GET':
-                                return pickle.dumps(bool(int(db.select_where_from_table('players', ['ready_for_round'],
-                                                                                        {'player_id': player_id},
-                                                                                        single_result=True))))
-
-            elif path[0] == 'colors':
-                if action == 'GET' and len(path) == 1:  # 'GET colors'
-                    return pickle.dumps(Colors)
-            elif path[0] == 'others':
-                if path[1] == 'duration':
-                    pass  # calculate and update duration in db
-            else:
                 print(f"Request not implemented: {data}")
+
         except OSError as socket_error:
-            str(socket_error)
+            print(str(socket_error))
             break
+
+
+def create_new_game():
+    global db
+    global game_id
+    global game
+
+    game_id = db.get_next_id('games')
+    db.insert('games', {})
+    game = Game(db, game_id)
+    print(f'New game created!\n')
 
 
 def clear_unnecessary_data_in_db() -> None:  # delete rows in chips, robots, rounds where there's a winner in the game
@@ -328,28 +334,33 @@ def main():
     except OSError as e:
         str(e)
 
-    port = s.getsockname()[1]  # port
+    port = s.getsockname()[1]
 
     s.listen()
     s.setblocking(False)
     sel.register(s, selectors.EVENT_READ, data=None)
 
-    print(f'Server Started\nIP: {ip_address} | Port: {port}\n')
-    pyperclip.copy(port)
-
     db = SQL("localhost", "root", "")
-    # db.clear_temporary_tables()
 
-    game_id = db.get_next_id('games')
-    db.insert('games', {})
-    game = Game(db, game_id)
-    print(f'New game created!\n')
+    create_new_game()
 
     clear_unnecessary_data_in_db()
+
+    print(f'Server Started\nIP: {ip_address} | Port: {port}\n')
+    pyperclip.copy(port)
 
     print("\nWaiting for connections\n")
 
     while True:
+        # check: events for game logics
+        datetime_now = datetime.now()
+        if game.is_round_active:
+            if game.hourglass.active:
+                game.hourglass.calc_passed_time(datetime_now)
+            if game.hourglass.get_is_time_over() and not game.active_player_id:
+                game.solutions_review()
+
+        # check: incoming data from connections
         events = sel.select(timeout=None)
         for key, mask in events:
             if key.data is None:
@@ -360,14 +371,6 @@ def main():
                 game.ready = True if active_player_count >= 2 else False
             else:
                 service_connection(key, mask)
-
-        # check for game logics
-        datetime_now = datetime.now()
-        if game.is_round_active:
-            if game.hourglass.active:
-                game.hourglass.calc_passed_time(datetime_now)
-            if game.hourglass.get_is_time_over() and not game.active_player_id:
-                game.solutions_review()
 
 
 if __name__ == '__main__':
