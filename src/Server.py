@@ -321,6 +321,7 @@ def main():
 
     # get ip-address of local sys
     ip_address = netifaces.ifaddresses(netifaces.interfaces()[0])[netifaces.AF_INET][0]['addr']
+    ip_address = 'localhost'
 
     try:
         s.bind((ip_address, 0))  # connect to local ip with port 0 -> socket will search for a free port
