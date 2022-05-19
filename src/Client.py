@@ -1,20 +1,13 @@
-import sys
 import os
-
-from src.Game_Objects import ReadyButton
-from src.Game_Objects import IndividualSolution
 
 os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = "hide"
 
-import pygame.freetype
-
+from src.Game_Objects import ReadyButton
+from src.Game_Objects import IndividualSolution
 from Helpers import Colors
 from Network import Network
 
-
-# from Game_Objects import IndividualSolution
-
-
+import pygame
 
 window: pygame.display
 network: Network
@@ -43,8 +36,6 @@ def draw_grid() -> None:
 
 
 def draw() -> None:
-    global input_field, ready_button
-
     window.fill(colors.background)
 
     for row in network.send("GET game/board/grid"):
@@ -59,13 +50,11 @@ def draw() -> None:
     for robot in network.send("GET game/robots"):
         robot.draw(window)
 
-    # network.send("GET game/menu/button").draw(window)
     network.send("GET game/hourglass").draw(window)
 
     individual_solution.draw(window)
 
-    ready_button_state_pressed = network.send(f"GET user/{player_id}/ready_button/state")
-    ready_button.set_state(ready_button_state_pressed)
+    ready_button.set_state(network.send(f"GET user/{player_id}/ready_button/state"))  # update state
     ready_button.draw(window)
 
     network.send("GET game/best_solution").draw(window, font)
@@ -114,10 +103,10 @@ def main():
 
     font = pygame.freetype.SysFont('Comic Sans MS', 0)
 
-    run: bool = True
-
+    # get the color scheme from the server
     colors = network.send('GET colors')
 
+    # initialize local GUI elements
     individual_solution = IndividualSolution(network.send("GET game/individual_solution/position"),
                                              network.send("GET game/individual_solution/size"), font, network,
                                              player_id)
@@ -125,10 +114,12 @@ def main():
                                network.send("GET game/ready_button/size"))
     ready_button.set_state(network.send("GET game/ready_button/state"))
 
+    # initialize window
     window = pygame.display.set_mode(network.send("GET game/window_dimensions"))
     pygame.display.set_caption("Ricochet Robots")
 
     clock = pygame.time.Clock()
+    run: bool = True
 
     try:
         while run:
@@ -140,35 +131,33 @@ def main():
                 if event.type == pygame.QUIT:
                     run = False
 
-                if pygame.mouse.get_pressed(num_buttons=5)[0]:  # left
+                if pygame.mouse.get_pressed(num_buttons=5)[0]:  # left click
                     mouse_position_tpl = pygame.mouse.get_pos()
                     mouse_position = {'x': mouse_position_tpl[0], 'y': mouse_position_tpl[1]}
 
                     # check: mouse click on the grid
-                    if is_position_on_grid(mouse_position):  # mouse click on the grid
+                    if is_position_on_grid(mouse_position):
                         if network.send("GET game/hourglass/time_over"):
-                            if player_id == network.send('GET user/active_player_id'):
+                            if player_id == network.send('GET user/active_player_id'):  # check: select robot
                                 network.send(
                                     f"POST game/robots/select?position_x={mouse_position['x']}&position_y={mouse_position['y']}")
 
-                    # check: mouse click on client_input field
+                    # check: mouse click on client input field
                     elif is_position_on_input_field(mouse_position):
-                        is_time_over = network.send("GET game/hourglass/time_over")
-                        if network.send("GET game/round/active") and not is_time_over:
+                        if network.send("GET game/round/active") and not network.send("GET game/hourglass/time_over"):
                             if individual_solution.input_field.active:
                                 individual_solution.input_field.set_active_state(False)
                             else:
                                 individual_solution.input_field.set_active_state(True)
-                    #
-                    # elif is_position_on_menu_button(game.menu.button, mouse_position):
-                    #     pass
-                    # game.menu.button.change_state()
 
+                    # check: mouse click on ready button
                     elif is_position_on_ready_button(mouse_position):
-                        is_pressed = network.send(f"POST user/{player_id}/change_status_next_round")
+                        is_pressed = network.send(
+                            f"POST user/{player_id}/change_status_next_round")  # return state of global ready button
                         ready_button.set_state(is_pressed)
 
                     else:
+                        # deactivate player input field
                         individual_solution.input_field.set_active_state(False)
 
                 if event.type == pygame.KEYDOWN:  # keyboard_input
@@ -186,13 +175,14 @@ def main():
     finally:
         pygame.quit()
         print("Connection lost")
+        main()
 
 
 if __name__ == '__main__':
-    ip_server = input("IP-address of the server: ")
+    # ip_server = input("IP-address of the server: ")
     port_server = int(input("Port of the server: "))
-    # server: dict = {"ip": "192.168.1.113", "port": port_server}
-    server: dict = {'ip': ip_server, 'port': port_server}
+    server: dict = {"ip": "192.168.1.113", "port": port_server}
+    # server: dict = {'ip': ip_server, 'port': port_server}
 
     # player_name = input('Please enter your name: ')
     player_name = 'PC'
