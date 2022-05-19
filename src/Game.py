@@ -5,6 +5,7 @@ import pygame.freetype
 
 from Game_Objects import Board
 from Game_Objects import Hourglass
+from Game_Objects import Leaderboard
 from Game_Objects import IndividualSolution
 from Game_Objects import Menu
 from Game_Objects import MenuButton
@@ -32,7 +33,7 @@ class Game:
         self.player_count_ready_for_round = 0
 
         width_menu_hourglass: int = 1 * self.FIELD_SIZE
-        width_leaderboard: int = 4 * self.FIELD_SIZE
+        width_leaderboard: int = 5 * self.FIELD_SIZE
         height_start_input: int = 3 * self.FIELD_SIZE
 
         self.board_offset: dict = {'top': self.FIELD_SIZE // 2,
@@ -54,6 +55,11 @@ class Game:
                                     'y': self.FIELD_SIZE // 2 + self.menu.button.size[
                                         'height'] + 3 * self.FIELD_SIZE},
                                    {'width': self.FIELD_SIZE, 'height': 12 * self.FIELD_SIZE})
+
+        self.leaderboard = Leaderboard(self.db, self.game_id, {
+            'x': self.board_offset['left'] + self.board.size['width'] + self.FIELD_SIZE // 2,
+            'y': self.board_offset['top']}, {'width': width_leaderboard, 'height': 16 * self.FIELD_SIZE},
+                                       self.FIELD_SIZE, self.board.targets)
 
         self.individual_solution = {'position': {'x': self.FIELD_SIZE, 'y': self.board_offset['top'] + self.board.size[
             'height'] + self.FIELD_SIZE // 2},
@@ -93,6 +99,7 @@ class Game:
         self.robots_draw = None
         self.targets_draw = None
         self.hourglass_draw = None
+        self.leaderboard_draw = None
         self.best_solution_draw = None
 
 
@@ -163,6 +170,7 @@ class Game:
         self.robots_draw = [robot.create_obj_for_draw() for robot in self.robots]
         self.targets_draw = [target.create_obj_for_draw() for target in self.board.targets]
         self.hourglass_draw = self.hourglass.create_obj_for_draw()
+        self.leaderboard_draw = self.leaderboard.create_obj_for_draw()
         self.best_solution_draw = self.best_solution.create_obj_for_draw()
 
     def set_global_ready_button_state(self, state_pressed):

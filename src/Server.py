@@ -167,6 +167,10 @@ def process_requests(data: str):
                         elif path[2] == 'time_over':  # GET game/hourglass/time_over
                             return pickle.dumps(game.hourglass.get_is_time_over())
 
+                    elif path[1] == 'leaderboard':
+                        if action == 'GET' and len(path) == 2:  # 'GET game/leaderboard'
+                            return pickle.dumps(game.leaderboard_draw)
+
                     elif path[1] == 'best_solution':
                         if action == 'GET' and len(path) == 2:  # 'GET game/best_solution'
                             return pickle.dumps(game.best_solution_draw)

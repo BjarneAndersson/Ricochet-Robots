@@ -70,6 +70,8 @@ def draw() -> None:
 
     network.send("GET game/best_solution").draw(window, font)
 
+    network.send("GET game/leaderboard").draw(window, font)
+
     pygame.display.update()
 
 

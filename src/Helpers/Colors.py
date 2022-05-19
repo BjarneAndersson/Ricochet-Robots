@@ -62,3 +62,8 @@ class Colors:
         'fill': green,
         'border': white
     }
+
+    leaderboard = {
+        'background': grey,
+        'border': white
+    }

@@ -1,5 +1,6 @@
 from .Board import Board
 from .Hourglass import Hourglass
+from .Leaderboard import Leaderboard
 from .IndividualSolution import IndividualSolution
 from .Menu import Menu
 from .Menu import MenuButton
