@@ -20,7 +20,106 @@ sel = selectors.DefaultSelector()
 
 db: SQL
 active_player_count: int = 0
-game: Game
+overall_player_count: int = 0
+game: Game = None
+
+
+# ---------------------------------------------------------MAIN---------------------------------------------------------
+
+
+def main():
+    global db
+    global active_player_count, overall_player_count
+    global game
+
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+    # get ip-address of local sys
+    ip_address = netifaces.ifaddresses(netifaces.interfaces()[0])[netifaces.AF_INET][0]['addr']
+    # ip_address = 'localhost'
+
+    try:
+        s.bind((ip_address, 0))  # connect to local ip with port 0 -> socket will search for a free port
+    except OSError as e:
+        str(e)
+
+    port = s.getsockname()[1]
+
+    s.listen()
+    s.setblocking(False)
+    sel.register(s, selectors.EVENT_READ, data=None)
+
+    db = SQL("localhost", "root", "")
+
+    create_new_game()
+
+    clear_unnecessary_data_in_db()
+
+    print(f'Server Started\nIP: {ip_address} | Port: {port}\n')
+    pyperclip.copy(port)
+
+    print("\nWaiting for connections\n")
+
+    while True:
+        # check: events for game logics
+        datetime_now = datetime.now()
+        if game.is_round_active:
+            if game.hourglass.active:
+                game.hourglass.calc_passed_time(datetime_now)
+            if game.hourglass.get_is_time_over() and not game.active_player_id:
+                game.solutions_review()
+
+        # check: incoming data from connections
+        events = sel.select(timeout=None)
+        for key, mask in events:
+            if key.data is None:
+                accept_wrapper(key.fileobj)
+                active_player_count += 1
+                overall_player_count += 1
+                db.update_where_from_table('games', {'player_count': active_player_count}, {'game_id': game.game_id})
+                game.ready = True if active_player_count >= 2 else False
+            else:
+                service_connection(key, mask)
+
+
+# --------------------------------------------------------SOCKET--------------------------------------------------------
+
+
+def accept_wrapper(sock):
+    connection, address = sock.accept()  # Should be ready to read
+    print(f"Accepted connection from {address}")
+    connection.setblocking(False)
+    data = types.SimpleNamespace(addr=address, inb=b"", outb=b"")
+    events = selectors.EVENT_READ | selectors.EVENT_WRITE
+    sel.register(connection, events, data=data)
+    player_id = db.get_next_id('players')
+    connection.send(str.encode(str(player_id)))  # send the client the player_id
+
+
+def service_connection(key, mask):
+    global db
+    global active_player_count
+    global game
+
+    sock = key.fileobj
+    data = key.data
+    if mask & selectors.EVENT_READ:
+        recv_data = sock.recv(1024).decode()  # Should be ready to read
+        if recv_data:
+            data.outb = process_requests(recv_data)
+        else:
+            print(f"Closing connection to {data.addr}")
+            sel.unregister(sock)
+            sock.close()
+            active_player_count -= 1
+            db.update_where_from_table('games', {'player_count': active_player_count}, {'game_id': game.game_id})
+    if mask & selectors.EVENT_WRITE:
+        if data.outb:
+            sent = sock.send(data.outb)  # Should be ready to write
+            data.outb = data.outb[sent:]
+
+
+# --------------------------------------------------------PROCESS-------------------------------------------------------
 
 
 def process_data(data: str):
@@ -50,29 +149,6 @@ def process_data(data: str):
             queries[query_split[0]] = query_split[1]
 
     return action, path, queries
-
-
-def service_connection(key, mask):
-    global db
-    global active_player_count
-    global game
-
-    sock = key.fileobj
-    data = key.data
-    if mask & selectors.EVENT_READ:
-        recv_data = sock.recv(1024).decode()  # Should be ready to read
-        if recv_data:
-            data.outb = process_requests(recv_data)
-        else:
-            print(f"Closing connection to {data.addr}")
-            sel.unregister(sock)
-            sock.close()
-            active_player_count -= 1
-            db.update_where_from_table('games', {'player_count': active_player_count}, {'game_id': game.game_id})
-    if mask & selectors.EVENT_WRITE:
-        if data.outb:
-            sent = sock.send(data.outb)  # Should be ready to write
-            data.outb = data.outb[sent:]
 
 
 def process_requests(data: str) -> bytes:
@@ -267,17 +343,10 @@ def process_requests(data: str) -> bytes:
 
     except OSError as socket_error:
         print(str(socket_error))
-        return None
+        return ''.encode()
 
 
-def create_new_game():
-    global db
-    global game
-
-    game_id = db.get_next_id('games')
-    db.insert('games', {})
-    game = Game(db, game_id)
-    print(f'New game created!\n')
+# ---------------------------------------------------------LOGIC--------------------------------------------------------
 
 
 def clear_unnecessary_data_in_db() -> None:  # delete rows in chips, robots, rounds where there's a winner in the game
@@ -296,70 +365,38 @@ def clear_unnecessary_data_in_db() -> None:  # delete rows in chips, robots, rou
         print(f"Cleared tables of game_ids: {finished_game_ids}")
 
 
-def accept_wrapper(sock):
-    connection, address = sock.accept()  # Should be ready to read
-    print(f"Accepted connection from {address}")
-    connection.setblocking(False)
-    data = types.SimpleNamespace(addr=address, inb=b"", outb=b"")
-    events = selectors.EVENT_READ | selectors.EVENT_WRITE
-    sel.register(connection, events, data=data)
-    player_id = db.get_next_id('players')
-    connection.send(str.encode(str(player_id)))  # send the client the player_id
-
-
-def main():
+def create_new_game() -> None:
     global db
-    global active_player_count
     global game
 
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    game_id = db.get_next_id('games')
+    db.insert('games', {})
+    game = Game(db, game_id)
+    print(f'New game created!\n')
 
-    # get ip-address of local sys
-    ip_address = netifaces.ifaddresses(netifaces.interfaces()[0])[netifaces.AF_INET][0]['addr']
-    # ip_address = 'localhost'
 
-    try:
-        s.bind((ip_address, 0))  # connect to local ip with port 0 -> socket will search for a free port
-    except OSError as e:
-        str(e)
+def start_round():
+    game.start_round()
 
-    port = s.getsockname()[1]
 
-    s.listen()
-    s.setblocking(False)
-    sel.register(s, selectors.EVENT_READ, data=None)
+def finish_game():
+    global game
+    db.update_where_from_table('games', {'player_count': overall_player_count}, {'game_id': game.game_id})
 
-    db = SQL("localhost", "root", "")
+    game_started_at: datetime = db.select_where_from_table('games', ['created_at'],
+                                                           {'game_id': game.game_id}, single_result=True)
+    duration = datetime.now() - game_started_at
+    duration = duration.seconds
+    db.update_where_from_table('games', {'duration': duration}, {'game_id': game.game_id})
 
+    winner_player_id = game.get_best_player_id_in_game()
+    db.update_where_from_table('games', {'winner_player_id': winner_player_id}, {'game_id': game.game_id})
+
+    game = None
     create_new_game()
 
-    clear_unnecessary_data_in_db()
 
-    print(f'Server Started\nIP: {ip_address} | Port: {port}\n')
-    pyperclip.copy(port)
-
-    print("\nWaiting for connections\n")
-
-    while True:
-        # check: events for game logics
-        datetime_now = datetime.now()
-        if game.is_round_active:
-            if game.hourglass.active:
-                game.hourglass.calc_passed_time(datetime_now)
-            if game.hourglass.get_is_time_over() and not game.active_player_id:
-                game.solutions_review()
-
-        # check: incoming data from connections
-        events = sel.select(timeout=None)
-        for key, mask in events:
-            if key.data is None:
-                accept_wrapper(key.fileobj)
-                active_player_count += 1
-                game.overall_player_count += 1
-                db.update_where_from_table('games', {'player_count': active_player_count}, {'game_id': game.game_id})
-                game.ready = True if active_player_count >= 2 else False
-            else:
-                service_connection(key, mask)
+# ----------------------------------------------------------------------------------------------------------------------
 
 
 if __name__ == '__main__':

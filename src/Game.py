@@ -1,15 +1,11 @@
 import random
 from datetime import datetime
 
-import pygame.freetype
-
 from Game_Objects import Board
 from Game_Objects import Hourglass
 from Game_Objects import Leaderboard
-from Game_Objects import IndividualSolution
 from Game_Objects import Menu
 from Game_Objects import MenuButton
-from Game_Objects import ReadyButton
 from Game_Objects import BestSolution
 from Game_Objects import Robot
 
@@ -21,72 +17,38 @@ class Game:
     COLUMNS: int = 16
     FIELD_SIZE: int = 50  # pixels
 
-    def __init__(self, db, game_id):
+    def __init__(self, db: SQL, game_id: int):
         self.db: SQL = db
         self.game_id: int = game_id
-        self.round_id: int
-        self.round_number: int = 0
-
-        self.robots = []
+        self.round_id: int = None
         self.ready: bool = False
-        self.is_round_active: bool = False
-        self.player_count_ready_for_round = 0
 
-        width_menu_hourglass: int = 1 * self.FIELD_SIZE
-        width_leaderboard: int = 5 * self.FIELD_SIZE
-        height_start_input: int = 3 * self.FIELD_SIZE
+        # initialisation of server game objects
+        self.board: Board = None
+        self.menu: Menu = None
+        self.hourglass: Hourglass = None
+        self.best_solution: BestSolution = None
+        self.leaderboard: Leaderboard = None
+        self.robots: list = self.create_robots()
 
-        self.board_offset: dict = {'top': self.FIELD_SIZE // 2,
-                                   'bottom': self.FIELD_SIZE // 2 + height_start_input + self.FIELD_SIZE // 2,
-                                   'left': self.FIELD_SIZE // 2 + width_menu_hourglass + self.FIELD_SIZE // 2,
-                                   'right': self.FIELD_SIZE // 2 + width_leaderboard + self.FIELD_SIZE // 2}
-
-        # object initialisation
-        self.board: Board = Board(self.db, self.game_id,
-                                  {'x': self.board_offset['left'], 'y': self.board_offset['top']}, self.FIELD_SIZE)
-
-        menu_button = MenuButton({'x': self.FIELD_SIZE // 2, 'y': self.FIELD_SIZE // 2},
-                                 {'width': self.FIELD_SIZE, 'height': self.FIELD_SIZE})
-
-        self.menu = Menu({'x': self.board.position['x'], 'y': self.board.position['y']},
-                         {'width': self.FIELD_SIZE, 'height': self.FIELD_SIZE}, menu_button)
-
-        self.hourglass = Hourglass({'x': self.FIELD_SIZE // 2,
-                                    'y': self.FIELD_SIZE // 2 + self.menu.button.size[
-                                        'height'] + 3 * self.FIELD_SIZE},
-                                   {'width': self.FIELD_SIZE, 'height': 12 * self.FIELD_SIZE})
-
-        self.leaderboard = Leaderboard(self.db, self.game_id, {
-            'x': self.board_offset['left'] + self.board.size['width'] + self.FIELD_SIZE // 2,
-            'y': self.board_offset['top']}, {'width': width_leaderboard, 'height': 16 * self.FIELD_SIZE},
-                                       self.FIELD_SIZE, self.board.targets)
-
-        self.individual_solution = {
-            'position': {'x': self.board_offset['left'], 'y': self.board_offset['top'] + self.board.size[
-                'height'] + self.FIELD_SIZE // 2},
-            'size': {'width': 5 * self.FIELD_SIZE, 'height': height_start_input}}
-        self.ready_button = {
-            'position': {
-                'x': self.board_offset['left'] + self.individual_solution['size']['width'] + self.FIELD_SIZE // 2,
-                'y': self.board_offset['top'] + self.board.size['height'] + self.FIELD_SIZE // 2},
-            'size': {'width': 5 * self.FIELD_SIZE, 'height': height_start_input}}
-
-        self.best_solution = BestSolution(self.db, self.game_id,
-                                          {'x': self.FIELD_SIZE // 2 + self.hourglass.size[
-                                              'width'] + self.FIELD_SIZE // 2 + self.individual_solution['size'][
-                                                    'width'] + self.FIELD_SIZE // 2 + self.ready_button['size'][
-                                                    'width'] + self.FIELD_SIZE // 2,
-                                           'y': self.board_offset['top'] + self.board.size[
-                                               'height'] + self.FIELD_SIZE // 2},
-                                          self.individual_solution['size'])
-
-        self.create_robots()
+        # declare position and size of client game objects
+        self.individual_solution: dict = None
+        self.ready_button: dict = None
 
         # window initialisation
+        self.board_offset: dict = {'top': self.FIELD_SIZE // 2,
+                                   'bottom': self.FIELD_SIZE // 2 + 3 * self.FIELD_SIZE + self.FIELD_SIZE // 2,
+                                   'left': self.FIELD_SIZE // 2 + 1 * self.FIELD_SIZE + self.FIELD_SIZE // 2,
+                                   'right': self.FIELD_SIZE // 2 + 5 * self.FIELD_SIZE + self.FIELD_SIZE // 2}
+
         self.window_dimensions = (
             self.board_offset['left'] + self.board.rect.width + self.board_offset['right'],
             self.board_offset['top'] + self.board.rect.height + self.board_offset['bottom'])
 
+        # variables needed for rounds
+        self.is_round_active: bool = False
+        self.player_count_ready_for_round: int = 0
+        self.round_number: int = 0
         self.active_player_id: int = None
         self.active_player_solution: int = None
 
@@ -105,40 +67,82 @@ class Game:
         self.leaderboard_draw = None
         self.best_solution_draw = None
 
+    def initialize_game_objects_server(self):
+        self.board: Board = Board(self.db, self.game_id,
+                                  {'x': self.board_offset['left'], 'y': self.board_offset['top']}, self.FIELD_SIZE)
 
-    def create_robots(self) -> None:
+        menu_button = MenuButton({'x': self.FIELD_SIZE // 2, 'y': self.FIELD_SIZE // 2},
+                                 {'width': self.FIELD_SIZE, 'height': self.FIELD_SIZE})
+
+        self.menu = Menu({'x': self.board.position['x'], 'y': self.board.position['y']},
+                         {'width': self.FIELD_SIZE, 'height': self.FIELD_SIZE}, menu_button)
+
+        self.hourglass = Hourglass({'x': self.FIELD_SIZE // 2,
+                                    'y': self.FIELD_SIZE // 2 + self.menu.button.size[
+                                        'height'] + 3 * self.FIELD_SIZE},
+                                   {'width': self.FIELD_SIZE, 'height': 12 * self.FIELD_SIZE})
+
+        self.leaderboard = Leaderboard(self.db, self.game_id, {
+            'x': self.board_offset['left'] + self.board.size['width'] + self.FIELD_SIZE // 2,
+            'y': self.board_offset['top']}, {'width': 5 * self.FIELD_SIZE, 'height': 16 * self.FIELD_SIZE},
+                                       self.FIELD_SIZE, self.board.targets)
+
+        self.best_solution = BestSolution(self.db, self.game_id,
+                                          {'x': self.FIELD_SIZE // 2 + self.hourglass.size[
+                                              'width'] + self.FIELD_SIZE // 2 + self.individual_solution['size'][
+                                                    'width'] + self.FIELD_SIZE // 2 + self.ready_button['size'][
+                                                    'width'] + self.FIELD_SIZE // 2,
+                                           'y': self.board_offset['top'] + self.board.size[
+                                               'height'] + self.FIELD_SIZE // 2},
+                                          self.individual_solution['size'])
+
+    def initialize_game_objects_client(self):
+        self.individual_solution = {
+            'position': {'x': self.board_offset['left'], 'y': self.board_offset['top'] + self.board.size[
+                'height'] + self.FIELD_SIZE // 2},
+            'size': {'width': 5 * self.FIELD_SIZE, 'height': 3 * self.FIELD_SIZE}}
+        self.ready_button = {
+            'position': {
+                'x': self.board_offset['left'] + self.individual_solution['size']['width'] + self.FIELD_SIZE // 2,
+                'y': self.board_offset['top'] + self.board.size['height'] + self.FIELD_SIZE // 2},
+            'size': {'width': 5 * self.FIELD_SIZE, 'height': 3 * self.FIELD_SIZE}}
+
+    def create_robots(self) -> list:
+        robots: list = []
         used_positions: list = [{'row': 7, 'column': 7}, {'row': 7, 'column': 8}, {'row': 8, 'column': 7},
                                 {'row': 8, 'column': 8}]
+
         for color_name in ['red', 'green', 'blue', 'yellow']:
-            current_position = {'row': random.randint(0, self.ROWS - 1), 'column': random.randint(0, self.COLUMNS - 1)}
+            # find an open random position
+            robot_position = {'row': random.randint(0, self.ROWS - 1), 'column': random.randint(0, self.COLUMNS - 1)}
+            while robot_position in used_positions:
+                robot_position = {'row': random.randint(0, self.ROWS - 1),
+                                  'column': random.randint(0, self.COLUMNS - 1)}
+            used_positions.append(robot_position)
 
-            while current_position in used_positions:
-                current_position = {'row': random.randint(0, self.ROWS - 1),
-                                    'column': random.randint(0, self.COLUMNS - 1)}
-
-            used_positions.append(current_position)
-
+            # insert robot data into db
             self.db.insert('robots',
                            {'game_id': self.game_id, 'color_name': color_name,
-                            'home_position_column': current_position['column'],
-                            'home_position_row': current_position['row'],
-                            'position_column': current_position['column'], 'position_row': current_position['row']})
+                            'home_position_column': robot_position['column'],
+                            'home_position_row': robot_position['row'],
+                            'position_column': robot_position['column'], 'position_row': robot_position['row']})
 
+            # create robot object
             robot_id = self.db.select_where_from_table('robots', ['robot_id'],
                                                        {'game_id': self.game_id, 'color_name': color_name,
-                                                        'position_column': current_position['column'],
-                                                        'position_row': current_position['row']}, single_result=True)
-
-            robot_position = self.db.select_where_from_table('robots', ['position_column', 'position_row'],
-                                                             {'game_id': self.game_id, 'robot_id': robot_id})[0]
-            robot_position = {'column': robot_position[0], 'row': robot_position[1]}
-
-            self.robots.append(
+                                                        'position_column': robot_position['column'],
+                                                        'position_row': robot_position['row']}, single_result=True)
+            robots.append(
                 Robot(self.db, self.game_id, robot_id, self.FIELD_SIZE,
                       self.board.grid[robot_position['row']][robot_position['column']]))
+        return robots
+
+    # ------------------------------------------------------------------------------------------------------------------
 
     def get_is_ready(self) -> bool:
         return self.ready
+
+    # ------------------------------------------------------------------------------------------------------------------
 
     def get_is_round_ready(self) -> bool:
         return self.player_count_ready_for_round >= self.db.select_where_from_table('games', ['player_count'],
@@ -184,8 +188,11 @@ class Game:
 
     def start_round(self):
         self.is_round_active = True
+
+        # insert round
         self.db.insert('rounds', {'game_id': self.game_id, 'round_number': self.get_new_round_number(),
                                   'chip_id': self.choose_rand_chip()})
+        # get round_id
         self.round_id = self.db.select_where_from_table('rounds', ['round_id'],
                                                         {'game_id': self.game_id, 'round_number': self.round_number},
                                                         single_result=True)
@@ -323,21 +330,3 @@ class Game:
         all_player_ids_and_scores_in_game.sort(key=lambda x: x[1], reverse=True)  # sort after scores
         best_player_id = all_player_ids_and_scores_in_game[0][0]
         return best_player_id
-
-    def restart(self):
-        self.__init__(self.db, self.game_id + 1)
-
-    def finish_game(self):
-        self.db.update_where_from_table('games', {'player_count': self.overall_player_count}, {'game_id': self.game_id})
-
-        game_started_at: datetime = self.db.select_where_from_table('games', ['created_at'],
-                                                                    {'game_id': self.game_id}, single_result=True)
-        duration = datetime.now() - game_started_at
-        duration = duration.seconds
-        self.db.update_where_from_table('games', {'duration': duration}, {'game_id': self.game_id})
-
-        winner_player_id = self.get_best_player_id_in_game()
-        self.db.update_where_from_table('games', {'winner_player_id': winner_player_id}, {'game_id': self.game_id})
-
-        print('Game restarted')
-        self.restart()
