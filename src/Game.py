@@ -205,14 +205,18 @@ class Game:
             self.control_move_count = 0
 
     def check_robot_on_target(self):
-        active_chip_id = self.db.select_where_from_table('chips', ['chip_id'], {'game_id': self.game_id, 'revealed': 1},
-                                                         single_result=True)
+        active_chip_id, chip_color_name = \
+        self.db.select_where_from_table('chips', ['chip_id', 'color_name'], {'game_id': self.game_id, 'revealed': 1})[0]
         active_chip_position_raw = \
         self.db.select_where_from_table('chips', ['position_column', 'position_row'], {'chip_id': active_chip_id})[0]
         active_chip_position = {'column': active_chip_position_raw[0], 'row': active_chip_position_raw[1]}
+
+        robot_color_name = self.db.select_where_from_table('robots', ['color_name'],
+                                                           {'robot_id': self.selected_robot.robot_id},
+                                                           single_result=True)
         active_robot_position = self.selected_robot.get_position()
 
-        if active_chip_position == active_robot_position:
+        if active_chip_position == active_robot_position and chip_color_name == robot_color_name:
             return True
         return False
 
