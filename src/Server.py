@@ -23,7 +23,6 @@ sel = selectors.DefaultSelector()
 
 db: SQL
 active_player_count: int = 0
-game_id: int
 game: Game
 
 
@@ -59,7 +58,6 @@ def process_data(data: str):
 def service_connection(key, mask):
     global db
     global active_player_count
-    global game_id
     global game
 
     sock = key.fileobj
@@ -73,7 +71,7 @@ def service_connection(key, mask):
             sel.unregister(sock)
             sock.close()
             active_player_count -= 1
-            db.update_where_from_table('games', {'player_count': active_player_count}, {'game_id': game_id})
+            db.update_where_from_table('games', {'player_count': active_player_count}, {'game_id': game.game_id})
     if mask & selectors.EVENT_WRITE:
         if data.outb:
             sent = sock.send(data.outb)  # Should be ready to write
@@ -82,7 +80,6 @@ def service_connection(key, mask):
 
 def process_requests(data: str) -> bytes:
     global db
-    global game_id
     global game
 
     try:
@@ -234,7 +231,7 @@ def process_requests(data: str) -> bytes:
             elif path[0] == 'user':
                 if path[1] == 'new':  # 'POST user/new?name=x'
                     if len(path) == 2:
-                        db.insert('players', {'game_id': game_id,
+                        db.insert('players', {'game_id': game.game_id,
                                               'name': queries['name']})
                         return str.encode("200")
                 else:
@@ -278,7 +275,6 @@ def process_requests(data: str) -> bytes:
 
 def create_new_game():
     global db
-    global game_id
     global game
 
     game_id = db.get_next_id('games')
@@ -290,7 +286,7 @@ def create_new_game():
 def clear_unnecessary_data_in_db() -> None:  # delete rows in chips, robots, rounds where there's a winner in the game
     request_result = db.select_where_from_table('games', ['game_id'], {'winner_player_id': 'NULL'},
                                                 comparison_symbol='<>')
-    request_result = list(range(134, game_id))
+    request_result = list(range(134, game.game_id))
     if request_result is None:
         return
     else:
@@ -317,7 +313,6 @@ def accept_wrapper(sock):
 def main():
     global db
     global active_player_count
-    global game_id
     global game
 
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -364,7 +359,7 @@ def main():
                 accept_wrapper(key.fileobj)
                 active_player_count += 1
                 game.overall_player_count += 1
-                db.update_where_from_table('games', {'player_count': active_player_count}, {'game_id': game_id})
+                db.update_where_from_table('games', {'player_count': active_player_count}, {'game_id': game.game_id})
                 game.ready = True if active_player_count >= 2 else False
             else:
                 service_connection(key, mask)
