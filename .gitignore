@@ -1,4 +1,3 @@
 .idea
-.pre-commit-config.yaml
 src/temp_storage.py
 /src/small_tests.py
