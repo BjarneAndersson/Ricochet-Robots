@@ -1,13 +1,12 @@
 import pickle
 import socket
-import sys
 
 
 class Network:
 
-    def __init__(self, ip_server: str, port_server: int):
+    def __init__(self, server_ip: str, server_port: int):
         self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.address: tuple = (ip_server, port_server)
+        self.address: tuple = (server_ip, server_port)
         self.player_id = int(self.connect())
 
     def get_player_id(self):
