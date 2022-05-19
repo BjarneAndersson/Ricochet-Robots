@@ -1,23 +1,20 @@
 import os
-import pickle
-import socket
-import netifaces
-import sys
-from _thread import *
-from datetime import datetime
-
-import nodeenv
-import pyperclip
 
 os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = "hide"  # hide pycharm import msg
 
-import Game_Objects
+import pickle
+import socket
+import netifaces
+import selectors
+import types
+
+import pyperclip
+
+from datetime import datetime
+
 from Game import Game
 from Helpers import Colors
 from SQL import SQL
-
-import selectors
-import types
 
 sel = selectors.DefaultSelector()
 
