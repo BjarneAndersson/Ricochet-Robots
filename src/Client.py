@@ -179,11 +179,13 @@ def main():
                 if event.type == pygame.KEYDOWN:  # keyboard_input
                     if individual_solution.input_field.active:
                         individual_solution.input_field.handle_event(event)
-                    elif player_id == network.send('GET user/active_player_id') and network.send(
-                            'GET game/robots/select'):
-                        if event.key in (pygame.K_UP, pygame.K_DOWN, pygame.K_LEFT, pygame.K_RIGHT):
-                            network.send(
-                                f'POST game/robots/move?direction={convert_pygame_key_to_direction_str(event.key)}')
+                    elif player_id == network.send('GET user/active_player_id'):
+                        if network.send('GET game/robots/select'):
+                            if event.key in (pygame.K_UP, pygame.K_DOWN, pygame.K_LEFT, pygame.K_RIGHT):
+                                network.send(
+                                    f'POST game/robots/move?direction={convert_pygame_key_to_direction_str(event.key)}')
+                        if event.key == pygame.K_TAB:
+                            network.send(f"POST game/robots/switch")
 
     except Exception as e:
         print(e)

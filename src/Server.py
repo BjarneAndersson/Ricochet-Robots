@@ -74,8 +74,6 @@ def main():
     print("\nWaiting for connections\n")
 
     while True:
-        game.check_if_new_draw_objects_should_be_created()
-
         # check: events for game logics
         if phase == Phases.PRE_GAME:
             create_new_game()
@@ -126,6 +124,8 @@ def main():
 
         elif phase == Phases.GAME_FINISH:
             finish_game()
+
+        game.check_if_new_draw_objects_should_be_created()
 
         # check: incoming data from connections
         events = sel.select(timeout=None)
@@ -365,6 +365,25 @@ def process_requests(data: str) -> bytes:
                                                            {'robot_id': game.selected_robot.robot_id})
                             except IndexError:
                                 game.selected_robot = None
+                            return str(200).encode()
+                    elif path[2] == 'switch':  # 'POST game/robots/switch'
+                        if len(path) == 3:
+                            robot_ids = [int(robot_id_tpl[0]) for robot_id_tpl in
+                                         db.select_where_from_table('robots', ['robot_id'], {'game_id': game.game_id})]
+                            current_robot_id = None if not game.selected_robot else game.selected_robot.robot_id
+                            if current_robot_id:
+                                db.update_where_from_table('robots', {'in_use': 0}, {'robot_id': current_robot_id})
+                                next_robot_id_index = robot_ids.index(current_robot_id) + 1 if robot_ids.index(
+                                    current_robot_id) + 1 < len(robot_ids) else 0
+                            else:
+                                next_robot_id_index = 0
+
+                            next_robot_id = robot_ids[next_robot_id_index]
+
+                            for robot in game.robots:
+                                if robot.robot_id == next_robot_id:
+                                    game.selected_robot = robot
+                                    db.update_where_from_table('robots', {'in_use': 1}, {'robot_id': robot.robot_id})
                             return str(200).encode()
                     elif path[2] == 'move':  # 'GET game/robots/move'
                         if len(path) == 3:
