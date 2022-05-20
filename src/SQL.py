@@ -138,6 +138,14 @@ class SQL:
         self.cursor_db.execute(f"TRUNCATE TABLE {table_name}")
         self.db.commit()
 
+    def perform_sql_query(self, query: str):
+        self.cursor_db.execute(query)
+
+        self.db.commit()
+
+        result = self.cursor_db.fetchall()
+        return result
+
     # ------------------------------------------------------------------------------------------------------------------
     def get_next_id(self, table_name):
         return self.select_where_from_table('information_schema.TABLES', ['AUTO_INCREMENT'],
