@@ -102,7 +102,7 @@ class LeaderboardDraw:
         for entry in self.entries:
             entry.draw(window, font, {'x': self.position['x'] + offset['left'] * self.field_size,
                                       'y': self.position['y'] + offset['top'] * self.field_size}, self.field_size)
-            offset['top'] += entry.calc_size(self.field_size)['height'] / self.field_size + self.field_size // 2
+            offset['top'] += entry.calc_size(self.field_size)['height'] / self.field_size + 0.5
 
 
 class Leaderboard:
