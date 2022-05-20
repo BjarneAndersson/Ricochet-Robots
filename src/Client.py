@@ -19,7 +19,6 @@ ready_button: ReadyButton
 font: pygame.freetype
 
 pygame.init()
-pygame.freetype.init()
 
 
 def draw_grid() -> None:
