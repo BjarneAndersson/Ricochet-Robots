@@ -193,7 +193,6 @@ def main():
     finally:
         pygame.quit()
         print("Connection lost")
-        main()
 
 
 if __name__ == '__main__':
