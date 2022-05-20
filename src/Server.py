@@ -74,6 +74,8 @@ def main():
     print("\nWaiting for connections\n")
 
     while True:
+        game.check_if_new_draw_objects_should_be_created()
+
         # check: events for game logics
         if phase == Phases.PRE_GAME:
             create_new_game()
@@ -213,8 +215,6 @@ def process_requests(data: str) -> bytes:
 
     try:
         action, path, queries = process_data(data)
-
-        game.check_if_new_draw_objects_should_be_created()
 
         if action == 'GET':
             if path[0] == 'game':
