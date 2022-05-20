@@ -46,8 +46,12 @@ def draw() -> None:
 
     draw_grid()
 
-    for target in network.send("GET game/targets"):
-        target.draw(window)
+    targets = network.send("GET game/targets")
+    if type(targets) == list:
+        for target in targets:
+            target.draw(window)
+    else:  # single target
+        targets.draw(window)
 
     for robot in network.send("GET game/robots"):
         robot.draw(window)
@@ -124,8 +128,16 @@ def main():
     run: bool = True
 
     try:
+        i = 0
         while run:
             clock.tick(30)  # 30 fps
+            i += 1
+            if i == 30:
+                i = 0
+                print(
+                    f"Data send: {network.amount_data_send / 1000}[kB/sec] | Data receive: {network.amount_data_recv / 1000}[kB/sec]")
+                network.amount_data_send = 0
+                network.amount_data_recv = 0
 
             draw()
 

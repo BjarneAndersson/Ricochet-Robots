@@ -9,6 +9,8 @@ class Network:
         self.address: tuple = (server_ip, server_port)
         self.player_id = int(self.connect())
 
+        self.amount_data_send, self.amount_data_recv = 0, 0
+
     def get_player_id(self):
         return self.player_id
 
@@ -21,9 +23,11 @@ class Network:
 
     def send(self, data):
         try:
+            self.amount_data_send += len(str(data).encode())
             self.client.send(str.encode(data))
 
             data = self.client.recv(4096 * 8)
+            self.amount_data_recv += len(data)
 
             try:
                 return pickle.loads(data)
