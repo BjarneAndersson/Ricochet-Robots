@@ -114,11 +114,29 @@ class Leaderboard:
         self.field_size = field_size
         self.targets: list = targets
 
-    def get_all_players_who_have_scored(self):
+    def get_all_player_ids_in_game(self):
         raw_query_player_ids = self.db.select_where_from_table('players', ['player_id'], {'game_id': self.game_id})
         if not raw_query_player_ids:
             return None
-        unfiltered_player_ids = [player_id_tpl[0] for player_id_tpl in raw_query_player_ids]
+        return [int(player_id_tpl[0]) for player_id_tpl in raw_query_player_ids]
+
+    def calc_score_for_players(self):
+        player_ids = self.get_all_player_ids_in_game()
+        if not player_ids:
+            return
+
+        for player_id in player_ids:
+            score = self.db.perform_sql_query(
+                f"SELECT COUNT(obtained_by_player_id) FROM chips WHERE obtained_by_player_id={player_id};")[0][0]
+            self.db.update_where_from_table('players', {'score': score}, {'player_id': player_id})
+
+    def get_all_players_who_have_scored(self):
+        self.calc_score_for_players()
+
+        unfiltered_player_ids = self.get_all_player_ids_in_game()
+        if not unfiltered_player_ids:
+            return
+
         final_player_ids = []
 
         for player_id in unfiltered_player_ids:
