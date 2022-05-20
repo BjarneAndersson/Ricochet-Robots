@@ -124,13 +124,15 @@ def main():
     window = pygame.display.set_mode(network.send("GET game/window_dimensions"))
     pygame.display.set_caption("Ricochet Robots")
 
+    frame_rate = network.send("GET others/server_tick_rate")
+
     clock = pygame.time.Clock()
     run: bool = True
 
     try:
         i = 0
         while run:
-            clock.tick(30)  # 30 fps
+            clock.tick(frame_rate)  # 30 fps
             i += 1
             if i == 30:
                 i = 0

@@ -257,6 +257,15 @@ def process_requests(data: str) -> bytes:
 
                     elif path[1] == 'targets':
                         if len(path) == 2:  # 'GET game/targets'
+                            if phase in [Phases.ROUND_STARTED, Phases.ROUND_COLLECT_SOLUTIONS,
+                                         Phases.ROUND_EVALUATE_ACTIVE_PLAYER,
+                                         Phases.ROUND_ACTIVE_PLAYER_SHOWS_SOLUTION]:
+                                active_target_id = int(db.select_where_from_table('rounds', ['chip_id'],
+                                                                                  {'round_id': game.round_id},
+                                                                                  single_result=True))
+                                for target in game.board.targets:
+                                    if target.chip_id == active_target_id:
+                                        return pickle.dumps(target.create_obj_for_draw())
                             return pickle.dumps(game.targets_draw)
 
                     elif path[1] == 'hourglass':
@@ -332,6 +341,10 @@ def process_requests(data: str) -> bytes:
             elif path[0] == 'colors':
                 if len(path) == 1:  # 'GET colors'
                     return pickle.dumps(Colors)
+            elif path[0] == 'others':
+                if path[1] == 'server_tick_rate':
+                    if len(path) == 2:  # 'GET others/server_tick_rate'
+                        return pickle.dumps(game.game_tick_rate)
         else:  # action == 'POST'
             if path[0] == 'game':
                 if path[1] == 'robots':
@@ -419,7 +432,7 @@ def clear_unnecessary_data_in_db() -> None:  # delete rows in chips, robots, rou
     global db, game
 
     request_result = db.select_where_from_table('games', ['game_id'], {'winner_player_id': 'NULL'},
-                                                comparison_symbol='<>')
+                                                comparison_symbol='=')
     if request_result is None:
         return
     else:
