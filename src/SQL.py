@@ -100,14 +100,16 @@ class SQL:
         for i, (statement, value) in enumerate(statement_value_pairs_set.items()):
             if i != 0:
                 query += ', '
-            query += f"{statement} = {value}".replace('\"', '\'')
+            value_for_query = value if type(value) != str else f"'{value}'"
+            query += f"{statement} = {value_for_query}".replace('\"', '\'')
 
         query += " WHERE "
 
         for i, (statement, value) in enumerate(statement_value_pairs_where.items()):
             if i != 0:
                 query += ' AND '
-            query += f"{statement} = {value}".replace('\"', '\'')
+            value_for_query = value if type(value) != str else f"'{value}'"
+            query += f"{statement} = {value_for_query}".replace('\"', '\'')
 
         query += ";"
 
