@@ -4,6 +4,7 @@ os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = "hide"
 
 from src.Game_Objects import ReadyButton
 from src.Game_Objects import IndividualSolution
+from src.Game_Objects import Menu
 from Helpers import Colors
 from Network import Network
 
@@ -14,6 +15,7 @@ window: pygame.display
 network: Network
 colors: Colors
 player_id: int
+menu: Menu
 individual_solution: IndividualSolution
 ready_button: ReadyButton
 font: pygame.freetype
@@ -57,6 +59,8 @@ def draw() -> None:
 
     network.send("GET game/hourglass").draw(window)
 
+    menu.draw(window, font)
+
     individual_solution.draw(window)
 
     ready_button.set_state(network.send(f"GET user/{player_id}/ready_button/state"))  # update state
@@ -74,8 +78,12 @@ def is_position_on_grid(position: dict) -> bool:
     return board_rect.collidepoint((position['x'], position['y']))
 
 
-def is_position_on_menu_button(menu_button, position: dict) -> bool:
-    return menu_button.rect.collidepoint((position['x'], position['y']))
+def is_position_on_menu_button(position: dict) -> bool:
+    return menu.button.rect.collidepoint((position['x'], position['y']))
+
+
+def is_position_on_menu_entry(position: dict) -> bool:
+    return menu.is_position_on_entry(position)
 
 
 def is_position_on_input_field(position: dict) -> bool:
@@ -98,7 +106,7 @@ def convert_pygame_key_to_direction_str(key) -> str:
 
 
 def main():
-    global window, network, server, colors, player_id, individual_solution, ready_button, font
+    global window, network, server, colors, player_id, menu, individual_solution, ready_button, font
 
     network = Network(server["ip"], server["port"])
     print("Connected to server!")
@@ -112,6 +120,10 @@ def main():
     colors = network.send('GET colors')
 
     # initialize local GUI elements
+    menu = Menu(network.send("GET game/menu/position"),
+                network.send("GET game/menu/button"),
+                font, network, player_id)
+
     individual_solution = IndividualSolution(network.send("GET game/individual_solution/position"),
                                              network.send("GET game/individual_solution/size"), font, network,
                                              player_id)
@@ -150,8 +162,17 @@ def main():
                     mouse_position_tpl = pygame.mouse.get_pos()
                     mouse_position = {'x': mouse_position_tpl[0], 'y': mouse_position_tpl[1]}
 
+                    # check: mouse click on menu entry
+                    if menu.visible:
+                        if is_position_on_menu_entry(mouse_position):
+                            menu.get_entry_of_position(mouse_position).action()
+                        # check: mouse click on menu button
+                        elif is_position_on_menu_button(mouse_position):
+                            menu.button.change_state()
+                            menu.menu_entries['change_name'].input_field.set_active_state(False)
+
                     # check: mouse click on the grid
-                    if is_position_on_grid(mouse_position):
+                    elif is_position_on_grid(mouse_position):
                         if network.send("GET game/round/phase/move_robots"):
                             if player_id == network.send('GET user/active_player_id'):  # check: select robot
                                 network.send(
@@ -171,6 +192,10 @@ def main():
                             f"POST user/{player_id}/change_status_next_round")  # return state of global ready button
                         ready_button.set_state(is_pressed)
 
+                    # check: mouse click on menu button
+                    elif is_position_on_menu_button(mouse_position):
+                        menu.button.change_state()
+
                     else:
                         # deactivate player input field
                         individual_solution.input_field.set_active_state(False)
@@ -178,6 +203,8 @@ def main():
                 if event.type == pygame.KEYDOWN:  # keyboard_input
                     if individual_solution.input_field.active:
                         individual_solution.input_field.handle_event(event)
+                    elif menu.menu_entries['change_name'].input_field.active:
+                        menu.menu_entries['change_name'].input_field.handle_event(event)
                     elif player_id == network.send('GET user/active_player_id'):
                         if network.send('GET game/robots/select'):
                             if event.key in (pygame.K_UP, pygame.K_DOWN, pygame.K_LEFT, pygame.K_RIGHT):
@@ -186,6 +213,9 @@ def main():
                         if event.key == pygame.K_TAB:
                             network.send(f"POST game/robots/switch")
 
+    except pygame.error as pygame_error:
+        print(pygame_error)
+        print("Connection closed")
     except Exception as e:
         print(e)
         raise RuntimeError("Game crashed")

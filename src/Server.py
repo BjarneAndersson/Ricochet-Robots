@@ -268,6 +268,17 @@ def process_requests(data: str) -> bytes:
                                         return pickle.dumps(target.create_obj_for_draw())
                             return pickle.dumps(game.targets_draw)
 
+                    elif path[1] == 'menu':
+                        if path[2] == 'position':  # 'GET game/menu/position'
+                            if len(path) == 3:
+                                return pickle.dumps(game.menu['position'])
+                        elif path[2] == 'size':  # 'GET game/menu/size'
+                            if len(path) == 3:
+                                return pickle.dumps(game.menu['size'])
+                        elif path[2] == 'button':  # 'GET game/menu/button'
+                            if len(path) == 3:
+                                return pickle.dumps(game.menu['button'])
+
                     elif path[1] == 'hourglass':
                         if len(path) == 2:  # 'GET game/hourglass'
                             return pickle.dumps(game.hourglass_draw)
@@ -403,13 +414,19 @@ def process_requests(data: str) -> bytes:
                     player_id = int(path[1])
 
                     if path[2] == 'solution':
-                        if len(path) == 3:  # 'POST user/<n>/solution?value=x'
+                        if len(path) == 3:  # 'POST user/<n>/solution?value=<x>'
                             if phase in [Phases.ROUND_STARTED, Phases.ROUND_COLLECT_SOLUTIONS]:
                                 solution = queries['value']
                                 db.update_where_from_table('players', {'solution': solution}, {'player_id': player_id})
                                 return str(200).encode()
                             else:
                                 return str(400).encode()
+
+                    elif path[2] == 'name':
+                        if len(path) == 3:  # 'POST user/<n>/name?value=<x>'
+                            name = queries['value']
+                            db.update_where_from_table('players', {'name': name}, {'player_id': player_id})
+                            return str(200).encode()
 
                     elif path[2] == 'change_status_next_round':  # 'POST user/{id}/change_status_next_round'
                         if len(path) == 3:
@@ -481,7 +498,13 @@ def finish_game():
 
 
 # ----------------------------------------------------------------------------------------------------------------------
-
+import cProfile
+import pstats
 
 if __name__ == '__main__':
-    main()
+    profile = cProfile.Profile()
+    profile.runcall(main)
+    ps = pstats.Stats(profile)
+    ps.sort_stats('tottime')
+    ps.print_stats(20)
+    # main()

@@ -31,7 +31,6 @@ class Game:
 
         # initialisation of server game objects
         self.board: Board = None
-        self.menu: Menu = None
         self.hourglass: Hourglass = None
         self.best_solution: BestSolution = None
         self.leaderboard: Leaderboard = None
@@ -39,6 +38,7 @@ class Game:
         self.robots: list = self.create_robots()
 
         # declare position and size of client game objects
+        self.menu: dict = None
         self.individual_solution: dict = None
         self.ready_button: dict = None
         self.initialize_game_objects_client()
@@ -73,15 +73,8 @@ class Game:
         self.board: Board = Board(self.db, self.game_id,
                                   {'x': self.board_offset['left'], 'y': self.board_offset['top']}, self.FIELD_SIZE)
 
-        menu_button = MenuButton({'x': self.FIELD_SIZE // 2, 'y': self.FIELD_SIZE // 2},
-                                 {'width': self.FIELD_SIZE, 'height': self.FIELD_SIZE})
-
-        self.menu = Menu({'x': self.board.position['x'], 'y': self.board.position['y']},
-                         {'width': self.FIELD_SIZE, 'height': self.FIELD_SIZE}, menu_button)
-
         self.hourglass = Hourglass({'x': self.FIELD_SIZE // 2,
-                                    'y': self.FIELD_SIZE // 2 + self.menu.button.size[
-                                        'height'] + 3 * self.FIELD_SIZE},
+                                    'y': self.FIELD_SIZE // 2 + 1 * self.FIELD_SIZE + 3 * self.FIELD_SIZE},
                                    {'width': self.FIELD_SIZE, 'height': 12 * self.FIELD_SIZE})
 
         self.leaderboard = Leaderboard(self.db, self.game_id, {
@@ -97,6 +90,15 @@ class Game:
                                           {'width': 5 * self.FIELD_SIZE, 'height': 3 * self.FIELD_SIZE})
 
     def initialize_game_objects_client(self):
+        menu_button = {
+            'position': {'x': self.FIELD_SIZE // 2, 'y': self.FIELD_SIZE // 2},
+            'size': {'width': self.FIELD_SIZE, 'height': self.FIELD_SIZE}
+        }
+        self.menu = {
+            'position': {'x': self.board.position['x'], 'y': self.board.position['y']},
+            'size': {'width': 4 * self.FIELD_SIZE, 'height': 4 * self.FIELD_SIZE},
+            'button': menu_button
+        }
         self.individual_solution = {
             'position': {'x': self.board_offset['left'], 'y': self.board_offset['top'] + self.board.size[
                 'height'] + self.FIELD_SIZE // 2},

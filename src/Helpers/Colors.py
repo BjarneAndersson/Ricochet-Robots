@@ -67,3 +67,9 @@ class Colors:
         'background': grey,
         'border': white
     }
+
+    menu = {
+        'background': grey,
+        'border': white,
+        'font_color': white
+    }
