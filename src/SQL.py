@@ -10,7 +10,6 @@ def convert_str_to_list(input_str):  # '[red, green]' -> ['red', 'green']
 class SQL:
     def __init__(self, host_id, user, password):
         self.host_id: str = host_id
-        self.port: int = 3306
         self.user: str = user
         self.password: str = password
         self.db_name: str = "ricochet_robots"
@@ -24,7 +23,6 @@ class SQL:
         try:
             self.db = mysql.connector.connect(
                 host=self.host_id,
-                port=self.port,
                 user=self.user,
                 password=self.password,
                 database=self.db_name

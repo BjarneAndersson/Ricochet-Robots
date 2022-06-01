@@ -64,7 +64,7 @@ def main():
     s.setblocking(False)
     sel.register(s, selectors.EVENT_READ, data=None)
 
-    db = SQL("localhost", "server", "password")
+    db = SQL("localhost", "root", "")
 
     clear_unnecessary_data_in_db()
 
