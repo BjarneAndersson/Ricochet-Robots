@@ -15,7 +15,7 @@ class SQL:
         self.db_name: str = "ricochet_robots"
 
         self.db = None
-        self.cursor_db = None
+        self.cursor = None
 
         self.connect_to_db()
 
@@ -30,8 +30,8 @@ class SQL:
         except mysql.connector.errors.DatabaseError:
             raise RuntimeError("Can't connect to database")
 
-        self.cursor_db = self.db.cursor(buffered=True)
-        self.cursor_db.execute("SET FOREIGN_KEY_CHECKS=0;")
+        self.cursor = self.db.cursor(buffered=True)
+        self.cursor.execute("SET FOREIGN_KEY_CHECKS=0;")
 
     def insert(self, table_name, column_value_pairs: dict):
         if len(column_value_pairs) != 0:  # dict not empty
@@ -55,11 +55,11 @@ class SQL:
 
             query = f"INSERT INTO {table_name} {columns} VALUES {values};"
 
-        self.cursor_db.execute(query)
+        self.cursor.execute(query)
 
         self.db.commit()
 
-        return f"{self.cursor_db.rowcount} record inserted."
+        return f"{self.cursor.rowcount} record inserted."
 
     def select_where_from_table(self, table_name, columns: list, statement_value_pairs: dict,
                                 single_result: bool = False,
@@ -79,9 +79,9 @@ class SQL:
 
         query += ";"
 
-        self.cursor_db.execute(query)
+        self.cursor.execute(query)
 
-        result = self.cursor_db.fetchall()
+        result = self.cursor.fetchall()
 
         if len(result) == 0:
             return None
@@ -113,11 +113,11 @@ class SQL:
 
         query += ";"
 
-        self.cursor_db.execute(query)
+        self.cursor.execute(query)
 
         self.db.commit()
 
-        return f"{self.cursor_db.rowcount} record(s) affected."
+        return f"{self.cursor.rowcount} record(s) affected."
 
     def delete_where_from_table(self, table_name, statement_value_pairs):
         query = f"DELETE FROM {table_name} WHERE "
@@ -129,23 +129,23 @@ class SQL:
 
         query += ";"
 
-        self.cursor_db.execute(query)
+        self.cursor.execute(query)
 
         self.db.commit()
 
         # print(self.cursor_db.rowcount, "record(s) deleted")
-        return f"{self.cursor_db.rowcount} record(s) deleted."
+        return f"{self.cursor.rowcount} record(s) deleted."
 
     def clear_table(self, table_name):
-        self.cursor_db.execute(f"TRUNCATE TABLE {table_name}")
+        self.cursor.execute(f"TRUNCATE TABLE {table_name}")
         self.db.commit()
 
     def perform_sql_query(self, query: str):
-        self.cursor_db.execute(query)
+        self.cursor.execute(query)
 
         self.db.commit()
 
-        result = self.cursor_db.fetchall()
+        result = self.cursor.fetchall()
         return result
 
     # ------------------------------------------------------------------------------------------------------------------
