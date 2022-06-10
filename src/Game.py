@@ -172,7 +172,7 @@ class Game:
 
     def get_is_round_ready(self) -> bool:
         player_count_ready_for_round_raw = self.db.execute_query(
-            f"SELECT player_id FROM players WHERE game_id={self.game_id} AND ready_for_round=1")
+            f"SELECT player_id FROM players WHERE game_id={self.game_id} AND ready_for_round=True")
         if not player_count_ready_for_round_raw:
             return False
         player_count_ready_for_round = len([player_id_tpl[0] for player_id_tpl in player_count_ready_for_round_raw])
