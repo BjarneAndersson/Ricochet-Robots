@@ -71,9 +71,9 @@ class Target:
     def __init__(self, db: SQL, game_id: int, chip_id: int, node, position_grid_center: dict):
         self.db = db
         self.chip_id = chip_id
-        self.color_name = self.db.execute_query(f"SELECT color_name FROM chips WHERE chip_id={self.chip_id}")[0][0]
+        self.color_name, self.symbol = \
+        self.db.execute_query(f"SELECT color_name, symbol FROM chips WHERE chip_id={self.chip_id}")[0]
         self.color: tuple = Colors.target[self.color_name]
-        self.symbol = self.db.execute_query(f"SELECT symbol FROM chips WHERE chip_id={self.chip_id}")[0][0]
         self.node = node
         self.position = self.node.get_position()
         self.size = node.get_size()

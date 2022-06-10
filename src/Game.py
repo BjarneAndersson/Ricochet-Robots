@@ -10,6 +10,7 @@ from Game_Objects import BestSolution
 from Game_Objects import Robot
 
 from SQL import SQL
+from src.Helpers import Converters
 
 
 class Game:
@@ -123,14 +124,11 @@ class Game:
             used_positions.append(robot_position)
 
             # insert robot data into db
-            self.db.insert('robots',
-                           {'game_id': self.game_id, 'color_name': color_name,
-                            'position': f"({robot_position['column']}, {robot_position['row']})",
-                            'home_position': f"({robot_position['column']}, {robot_position['row']})"})
+            robot_id = self.db.execute_query(
+                f"INSERT INTO robots (game_id, color_name, position, home_position) VALUES ({self.game_id},'{color_name}','({robot_position['column']},{robot_position['row']})','({robot_position['column']},{robot_position['row']})') RETURNING robot_id;")[
+                0][0]
 
             # create robot object
-            robot_id = self.db.execute_query(
-                f"SELECT robot_id FROM robots WHERE game_id={self.game_id} AND color_name={color_name}")[0][0]
             robots.append(
                 Robot(self.db, self.game_id, robot_id, self.FIELD_SIZE,
                       self.board.grid[robot_position['row']][robot_position['column']]))
@@ -209,8 +207,10 @@ class Game:
         self.is_round_active = True
 
         # insert round
-        self.db.insert('rounds', {'game_id': self.game_id, 'round_number': self.get_new_round_number(),
-                                  'chip_id': self.choose_rand_chip()})
+        current_timestamp = str(datetime.now()).split(".")[0]
+        round_id = self.db.execute_query(
+            f"INSERT INTO rounds (game_id, round_number, chip_id, started_at) VALUES ({self.game_id},{self.get_new_round_number()},{self.choose_rand_chip()},{current_timestamp}) RETURNING round_id;")[
+            0][0]
 
         self.round_id = self.db.execute_query(
             f"SELECT round_id FROM rounds WHERE game_id={self.game_id} AND round_number={self.round_number}")[0][0]
@@ -223,13 +223,10 @@ class Game:
 
     def check_robot_on_target(self):
         if self.selected_robot:
-            active_chip_id, chip_color_name = \
+            active_chip_id, chip_color_name, active_chip_position = \
                 self.db.execute_query(
-                    f"SELECT chip_id, color_name FROM chips WHERE game_id={self.game_id} AND revealed=True")[0]
-            active_chip_position_raw = \
-                self.db.execute_query(
-                    f"SELECT position FROM chips WHERE chip_id={active_chip_id}")[0]
-            active_chip_position = {'column': active_chip_position_raw[0], 'row': active_chip_position_raw[1]}
+                    f"SELECT chip_id, color_name, position FROM chips WHERE game_id={self.game_id} AND revealed=True")[
+                    0]
 
             robot_color_name = self.db.execute_query(
                 f"SELECT color_name FROM robots WHERE robot_id={self.selected_robot.robot_id}")[0][0]

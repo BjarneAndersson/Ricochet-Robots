@@ -7,7 +7,7 @@ from .Wall import Wall
 from src.SQL import SQL
 
 try:
-    from src.Helpers import Colors
+    from src.Helpers import Colors, Converters
 except ModuleNotFoundError:
     from Helpers import Colors
 
@@ -37,16 +37,16 @@ class QuarterBoardYellow(QuarterBoard):
 
     def create_quarter_board(self):
         # target spaces
-        db.insert('chips',
-                  {'game_id': game_id, 'color_name': 'blue', 'symbol': 'circle', 'position': "(6,1)"})
-        db.insert('chips',
-                  {'game_id': game_id, 'color_name': 'yellow', 'symbol': 'triangle', 'position': "(1,3)"})
-        db.insert('chips',
-                  {'game_id': game_id, 'color_name': 'green', 'symbol': 'square', 'position': "(5,4)"})
-        db.insert('chips',
-                  {'game_id': game_id, 'color_name': 'red', 'symbol': 'hexagon', 'position': "(2,5)"})
-        db.insert('chips',
-                  {'game_id': game_id, 'color_name': 'all', 'symbol': 'spiral', 'position': "(7,5)"})
+        db.execute_query(
+            f"INSERT INTO chips (game_id, color_name, symbol, position) VALUES ({game_id},'blue','circle','(6,1)') RETURNING chip_id;")
+        db.execute_query(
+            f"INSERT INTO chips (game_id, color_name, symbol, position) VALUES ({game_id},'yellow','triangle','(1,3)') RETURNING chip_id;")
+        db.execute_query(
+            f"INSERT INTO chips (game_id, color_name, symbol, position) VALUES ({game_id},'green','square','(5,4)') RETURNING chip_id;")
+        db.execute_query(
+            f"INSERT INTO chips (game_id, color_name, symbol, position) VALUES ({game_id},'red','hexagon','(2,5)') RETURNING chip_id;")
+        db.execute_query(
+            f"INSERT INTO chips (game_id, color_name, symbol, position) VALUES ({game_id},'all','spiral','(7,5)') RETURNING chip_id;")
 
         # walls
         # middle barrier
@@ -95,14 +95,14 @@ class QuarterBoardRed(QuarterBoard):
 
     def create_quarter_board(self):
         # target chips
-        db.insert('chips',
-                  {'game_id': game_id, 'color_name': 'red', 'symbol': 'triangle', 'position': "(14,1)"})
-        db.insert('chips',
-                  {'game_id': game_id, 'color_name': 'blue', 'symbol': 'hexagon', 'position': "(11,2)"})
-        db.insert('chips',
-                  {'game_id': game_id, 'color_name': 'green', 'symbol': 'circle', 'position': "(13,6)"})
-        db.insert('chips',
-                  {'game_id': game_id, 'color_name': 'yellow', 'symbol': 'square', 'position': "(10,7)"})
+        db.execute_query(
+            f"INSERT INTO chips (game_id, color_name, symbol, position) VALUES ({game_id},'red','triangle','(14,1)') RETURNING chip_id;")
+        db.execute_query(
+            f"INSERT INTO chips (game_id, color_name, symbol, position) VALUES ({game_id},'blue','hexagon','(11,2)') RETURNING chip_id;")
+        db.execute_query(
+            f"INSERT INTO chips (game_id, color_name, symbol, position) VALUES ({game_id},'green','circle','(13,6)') RETURNING chip_id;")
+        db.execute_query(
+            f"INSERT INTO chips (game_id, color_name, symbol, position) VALUES ({game_id},'yellow','square','(10,7)') RETURNING chip_id;")
 
         # walls
         # middle barrier
@@ -146,14 +146,14 @@ class QuarterBoardGreen(QuarterBoard):
 
     def create_quarter_board(self):
         # target chips
-        db.insert('chips',
-                  {'game_id': game_id, 'color_name': 'yellow', 'symbol': 'hexagon', 'position': "(3,9)"})
-        db.insert('chips',
-                  {'game_id': game_id, 'color_name': 'red', 'symbol': 'circle', 'position': "(1,11)"})
-        db.insert('chips',
-                  {'game_id': game_id, 'color_name': 'blue', 'symbol': 'square', 'position': "(6,12)"})
-        db.insert('chips',
-                  {'game_id': game_id, 'color_name': 'green', 'symbol': 'triangle', 'position': "(2,14)"})
+        db.execute_query(
+            f"INSERT INTO chips (game_id, color_name, symbol, position) VALUES ({game_id},'yellow','hexagon','(3,9)') RETURNING chip_id;")
+        db.execute_query(
+            f"INSERT INTO chips (game_id, color_name, symbol, position) VALUES ({game_id},'red','circle','(1,11)') RETURNING chip_id;")
+        db.execute_query(
+            f"INSERT INTO chips (game_id, color_name, symbol, position) VALUES ({game_id},'blue','square','(6,12)') RETURNING chip_id;")
+        db.execute_query(
+            f"INSERT INTO chips (game_id, color_name, symbol, position) VALUES ({game_id},'green','triangle','(2,14)') RETURNING chip_id;")
 
         # walls
         # middle barrier
@@ -197,14 +197,14 @@ class QuarterBoardBlue(QuarterBoard):
 
     def create_quarter_board(self):
         # target chips
-        db.insert('chips',
-                  {'game_id': game_id, 'color_name': 'blue', 'symbol': 'triangle', 'position': "(13,9)"})
-        db.insert('chips',
-                  {'game_id': game_id, 'color_name': 'yellow', 'symbol': 'circle', 'position': "(9,11)"})
-        db.insert('chips',
-                  {'game_id': game_id, 'color_name': 'red', 'symbol': 'square', 'position': "(14,13)"})
-        db.insert('chips',
-                  {'game_id': game_id, 'color_name': 'green', 'symbol': 'hexagon', 'position': "(10,14)"})
+        db.execute_query(
+            f"INSERT INTO chips (game_id, color_name, symbol, position) VALUES ({game_id},'blue','triangle','(13,9)') RETURNING chip_id;")
+        db.execute_query(
+            f"INSERT INTO chips (game_id, color_name, symbol, position) VALUES ({game_id},'yellow','circle','(9,11)') RETURNING chip_id;")
+        db.execute_query(
+            f"INSERT INTO chips (game_id, color_name, symbol, position) VALUES ({game_id},'red','square','(14,13)') RETURNING chip_id;")
+        db.execute_query(
+            f"INSERT INTO chips (game_id, color_name, symbol, position) VALUES ({game_id},'green','hexagon','(10,14)') RETURNING chip_id;")
 
         # walls
         # middle barrier
@@ -298,8 +298,8 @@ class Board:
         chip_ids = db.execute_query(f"SELECT chip_id FROM chips WHERE game_id={game_id}")
         chip_ids = [chip_id[0] for chip_id in chip_ids]
         for chip_id in chip_ids:
-            target_position = db.execute_query(f"SELECT position FROM chips WHERE chip_id={chip_id}")[0][0].split(",")
-            target_position = {'column': int(target_position[0]), 'row': int(target_position[1])}
+            target_position = Converters.db_position_to_position(
+                db.execute_query(f"SELECT position FROM chips WHERE chip_id={chip_id}")[0][0])
             node = self.grid[target_position['row']][target_position['column']]
             self.targets.append(Target(db, game_id, chip_id, node, self.get_position_grid_center()))
 

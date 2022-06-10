@@ -451,7 +451,9 @@ def create_new_game() -> None:
     global db
     global game
 
-    game_id = db.insert('games', {})
+    current_timestamp = str(datetime.now()).split(".")[0]
+    game_id = db.execute_query(f"INSERT INTO games (created_at) VALUES ('{current_timestamp}') RETURNING game_id;")[0][
+        0]
     game = Game(db, game_id)
     print(f'New game created!\n')
 

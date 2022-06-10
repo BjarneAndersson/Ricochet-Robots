@@ -4,7 +4,7 @@ from .Node import Node
 from src.SQL import SQL
 
 try:
-    from src.Helpers import Colors
+    from src.Helpers import Colors, Converters
 except ModuleNotFoundError:
     from Helpers import Colors
 
@@ -45,9 +45,10 @@ class Robot:
         return True
 
     def get_position(self) -> dict:
-        column, row = self.db.execute_query(f"SELECT position FROM robots WHERE robot_id={self.robot_id}")[
-            0].split(",")
-        return {'column': int(column), 'row': int(row)}
+        position = Converters.db_position_to_position(
+            self.db.execute_query(f"SELECT position FROM robots WHERE robot_id={self.robot_id}")[
+                0])
+        return position
 
     def set_position(self, _position: dict, grid, is_home=False) -> None:
         key_column = 'position_column'
