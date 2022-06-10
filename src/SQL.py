@@ -35,35 +35,6 @@ class SQL:
 
         self.cursor = self.db.cursor()
 
-    def insert(self, table_name, column_value_pairs: dict):
-        if len(column_value_pairs) != 0:  # dict not empty
-            columns = str(list(column_value_pairs.keys())).replace("[", "(").replace("]", ")").replace("\"",
-                                                                                                       "").replace(
-                "\'", "")  # ['x', 'y'] -> (x, y)
-            values = str(list(column_value_pairs.values())).replace("[", "(").replace("]", ")").replace("\"",
-                                                                                                        "\'")  # [2, "3"] -> (2, '3')
-            query = f"INSERT INTO {table_name} {columns} VALUES {values};"
-        else:  # column_value_pairs = {}
-            columns = self.get_all_column_names(table_name)
-            values = []
-
-            for column in columns:
-                values.append(f"Default({column})")
-
-            columns = str(columns).replace("[", "(").replace("]", ")").replace("\"", "").replace("\'",
-                                                                                                 "")  # ['x', 'y'] -> (x, y)
-            values = str(values).replace("[", "(").replace("]", ")").replace("\'",
-                                                                             "")  # ['Default(game_id)', 'Default(active_bots)'] -> (Default(game_id), Default(active_bots))
-
-            query = f"INSERT INTO {table_name} {columns} VALUES {values};"
-
-        self.cursor.execute(query)
-
-        self.db.commit()
-
-        result = self.cursor.fetchall()
-        return result
-
     def execute_query(self, query: str):
         if not query.endswith(";"):
             query += ";"
