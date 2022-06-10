@@ -226,7 +226,7 @@ def main():
 if __name__ == '__main__':
     # ip_server = input("IP-address of the server: ")
     port_server = int(input("Port of the server: "))
-    server: dict = {"ip": "192.168.1.113", "port": port_server}
+    server: dict = {"ip": "172.31.128.1", "port": port_server}
     # server: dict = {'ip': ip_server, 'port': port_server}
 
     # player_name = input('Please enter your name: ')
