@@ -55,9 +55,8 @@ class BestSolution:
         self.size = size
 
     def create_obj_for_draw(self) -> BestSolutionDraw:
-        all_player_ids_and_solutions_in_game: list = self.db.select_where_from_table('players',
-                                                                                     ['player_id', 'solution'], {
-                                                                                         'game_id': self.game_id})  # get all player in game
+        all_player_ids_and_solutions_in_game: list = self.db.execute_query(
+            f"SELECT player_id, solution FROM players WHERE game_id={self.game_id}")  # get all player in game
         if all_player_ids_and_solutions_in_game:
             all_player_ids_and_solutions_in_game = list(
                 filter(lambda x: x[1] != -1,
@@ -66,7 +65,7 @@ class BestSolution:
             if len(all_player_ids_and_solutions_in_game) != 0:
                 best_player_id = all_player_ids_and_solutions_in_game[0][0]
                 name, solution = \
-                    self.db.select_where_from_table('players', ['name', 'solution'], {'player_id': best_player_id})[0]
+                self.db.execute_query(f"SELECT name, solution FROM players WHERE player_id={best_player_id}")[0]
             else:
                 solution = ''
                 name = ''

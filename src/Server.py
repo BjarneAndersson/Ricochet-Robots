@@ -34,7 +34,7 @@ class Phases(Enum):
 db: SQL
 active_player_count: int = 0
 overall_player_count: int = 0
-game: Game = None
+game: Game
 phase: Phases = Phases.PRE_GAME
 
 
@@ -64,9 +64,9 @@ def main():
     s.setblocking(False)
     sel.register(s, selectors.EVENT_READ, data=None)
 
-    db = SQL("localhost", "root", "")
+    db = SQL("localhost", "root", "root")
 
-    clear_unnecessary_data_in_db()
+    # clear_unnecessary_data_in_db()
 
     print(f'Server Started\nIP: {ip_address} | Port: {port}\n')
     pyperclip.copy(port)
@@ -87,7 +87,7 @@ def main():
         elif phase == Phases.ROUND_STARTED:
             # check: sb. submitted a solution
             all_solutions_in_game = [solution_tpl[0] for solution_tpl in
-                                     db.select_where_from_table('players', ['solution'], {'game_id': game.game_id})]
+                                     db.execute_query(f"SELECT solution FROM players WHERE game_id={game.game_id}")]
             all_valid_solutions = list(filter(lambda x: x != -1, all_solutions_in_game))
 
             if all_valid_solutions:  # if there is a valid submitted solution
@@ -105,9 +105,8 @@ def main():
                 print('Skipping target chip!')
                 phase = Phases.ROUND_FINISH
             else:
-                game.active_player_solution = db.select_where_from_table('players', ['solution'],
-                                                                         {'player_id': game.active_player_id},
-                                                                         single_result=True)
+                game.active_player_solution = \
+                db.execute_query(f"SELECT solution FROM players WHERE player_id={game.active_player_id}")[0][0]
                 phase = Phases.ROUND_ACTIVE_PLAYER_SHOWS_SOLUTION
 
         elif phase == Phases.ROUND_ACTIVE_PLAYER_SHOWS_SOLUTION:
@@ -134,7 +133,7 @@ def main():
                 accept_wrapper(key.fileobj)
                 active_player_count += 1
                 overall_player_count += 1
-                db.update_where_from_table('games', {'player_count': active_player_count}, {'game_id': game.game_id})
+                db.execute_query(f"UPDATE games SET player_count={active_player_count} WHERE game_id={game.game_id}")
                 game.ready = True if active_player_count >= 1 else False
             else:
                 service_connection(key, mask)
@@ -150,8 +149,6 @@ def accept_wrapper(sock):
     data = types.SimpleNamespace(addr=address, inb=b"", outb=b"")
     events = selectors.EVENT_READ | selectors.EVENT_WRITE
     sel.register(connection, events, data=data)
-    player_id = db.get_next_id('players')
-    connection.send(str.encode(str(player_id)))  # send the client the player_id
 
 
 def service_connection(key, mask):
@@ -170,7 +167,7 @@ def service_connection(key, mask):
             sel.unregister(sock)
             sock.close()
             active_player_count -= 1
-            db.update_where_from_table('games', {'player_count': active_player_count}, {'game_id': game.game_id})
+            db.execute_query(f"UPDATE games SET player_count={active_player_count} WHERE game_id={game.game_id}")
     if mask & selectors.EVENT_WRITE:
         if data.outb:
             sent = sock.send(data.outb)  # Should be ready to write
@@ -260,9 +257,10 @@ def process_requests(data: str) -> bytes:
                             if phase in [Phases.ROUND_STARTED, Phases.ROUND_COLLECT_SOLUTIONS,
                                          Phases.ROUND_EVALUATE_ACTIVE_PLAYER,
                                          Phases.ROUND_ACTIVE_PLAYER_SHOWS_SOLUTION]:
-                                active_target_id = int(db.select_where_from_table('rounds', ['chip_id'],
-                                                                                  {'round_id': game.round_id},
-                                                                                  single_result=True))
+
+                                active_target_id = int(
+                                    db.execute_query(f"SELECT chip_id FROM rounds WHERE round_id={game.round_id}")[0][
+                                        0])
                                 for target in game.board.targets:
                                     if target.chip_id == active_target_id:
                                         return pickle.dumps(target.create_obj_for_draw())
@@ -332,22 +330,20 @@ def process_requests(data: str) -> bytes:
 
                     if path[2] == 'name':  # 'GET user/<n>/name'
                         if len(path) == 3:
-                            name = db.select_where_from_table("players", ["name"], {"player_id": player_id},
-                                                              single_result=True)
+                            name = db.execute_query(f"SELECT name FROM players WHERE player_id={player_id}")[0][0]
                             return str(name).encode()
                     elif path[2] == 'solution':  # 'GET user/<n>/solution'
                         if len(path) == 3:
-                            solution = db.select_where_from_table("players", ["solution"], {"player_id": player_id},
-                                                                  single_result=True)
+                            solution = db.execute_query(f"SELECT solution FROM players WHERE player_id={player_id}")[0][
+                                0]
                             return str(solution).encode()
 
                     elif path[2] == 'ready_button':
                         if path[3] == 'state':  # 'GET user/<n>/ready_button/state'
                             if len(path) == 4:
                                 return pickle.dumps(
-                                    bool(int(db.select_where_from_table('players', ['ready_for_round'],
-                                                                        {'player_id': player_id},
-                                                                        single_result=True))))
+                                    bool(int(db.execute_query(
+                                        f"SELECT ready_for_round FROM players WHERE player_id={player_id}")[0][0])))
 
             elif path[0] == 'colors':
                 if len(path) == 1:  # 'GET colors'
@@ -362,8 +358,7 @@ def process_requests(data: str) -> bytes:
                     if path[2] == 'select':  # 'POST game/robots/select?position_x=x&position_y=y
                         if len(path) == 3:
                             if game.selected_robot:
-                                db.update_where_from_table('robots', {'in_use': 0},
-                                                           {'robot_id': game.selected_robot.robot_id})
+                                game.unselect_robot()
                             node_at_position = game.board.get_node(
                                 {'x': int(queries['position_x']), 'y': int(queries['position_y'])})
                             grid_position = node_at_position.get_position()
@@ -372,18 +367,17 @@ def process_requests(data: str) -> bytes:
                                                        robot.get_position()['column'] == grid_position[
                                                            'column'] and
                                                        robot.get_position()['row'] == grid_position['row']][0]
-                                db.update_where_from_table('robots', {'in_use': 1},
-                                                           {'robot_id': game.selected_robot.robot_id})
                             except IndexError:
-                                game.selected_robot = None
+                                game.unselect_robot()
                             return str(200).encode()
                     elif path[2] == 'switch':  # 'POST game/robots/switch'
                         if len(path) == 3:
                             robot_ids = [int(robot_id_tpl[0]) for robot_id_tpl in
-                                         db.select_where_from_table('robots', ['robot_id'], {'game_id': game.game_id})]
+                                         db.execute_query(f"SELECT robot_id FROM robots WHERE game_id={game.game_id}")]
+
                             current_robot_id = None if not game.selected_robot else game.selected_robot.robot_id
                             if current_robot_id:
-                                db.update_where_from_table('robots', {'in_use': 0}, {'robot_id': current_robot_id})
+                                game.unselect_robot()
                                 next_robot_id_index = robot_ids.index(current_robot_id) + 1 if robot_ids.index(
                                     current_robot_id) + 1 < len(robot_ids) else 0
                             else:
@@ -393,8 +387,7 @@ def process_requests(data: str) -> bytes:
 
                             for robot in game.robots:
                                 if robot.robot_id == next_robot_id:
-                                    game.selected_robot = robot
-                                    db.update_where_from_table('robots', {'in_use': 1}, {'robot_id': robot.robot_id})
+                                    game.select_robot(robot)
                             return str(200).encode()
                     elif path[2] == 'move':  # 'GET game/robots/move'
                         if len(path) == 3:
@@ -407,9 +400,9 @@ def process_requests(data: str) -> bytes:
             elif path[0] == 'user':
                 if path[1] == 'new':  # 'POST user/new?name=x'
                     if len(path) == 2:
-                        db.insert('players', {'game_id': game.game_id,
-                                              'name': queries['name']})
-                        return str.encode("200")
+                        player_id = db.insert('players', {'game_id': game.game_id,
+                                                          'name': queries['name']})
+                        return str(player_id).encode()
                 else:
                     player_id = int(path[1])
 
@@ -417,7 +410,7 @@ def process_requests(data: str) -> bytes:
                         if len(path) == 3:  # 'POST user/<n>/solution?value=<x>'
                             if phase in [Phases.ROUND_STARTED, Phases.ROUND_COLLECT_SOLUTIONS]:
                                 solution = queries['value']
-                                db.update_where_from_table('players', {'solution': solution}, {'player_id': player_id})
+                                db.execute_query(f"UPDATE players SET solution={solution} WHERE player_id={player_id}")
                                 return str(200).encode()
                             else:
                                 return str(400).encode()
@@ -425,19 +418,19 @@ def process_requests(data: str) -> bytes:
                     elif path[2] == 'name':
                         if len(path) == 3:  # 'POST user/<n>/name?value=<x>'
                             name = queries['value']
-                            db.update_where_from_table('players', {'name': name}, {'player_id': player_id})
+                            db.execute_query(f"UPDATE players SET name={name} WHERE player_id={player_id}")
                             return str(200).encode()
 
                     elif path[2] == 'change_status_next_round':  # 'POST user/{id}/change_status_next_round'
                         if len(path) == 3:
                             if game.ready:
-                                current_status = bool(db.select_where_from_table('players', ['ready_for_round'],
-                                                                                 {'player_id': player_id},
-                                                                                 single_result=True))
+                                current_status = bool(db.execute_query(
+                                    f"SELECT ready_for_round FROM players WHERE player_id={player_id}")[0][0])
+
                                 if phase == Phases.PRE_ROUND:
                                     new_status = not current_status
-                                    db.update_where_from_table('players', {'ready_for_round': int(new_status)},
-                                                               {'player_id': player_id})
+                                    db.execute_query(
+                                        f"UPDATE players SET ready_for_round={new_status} WHERE player_id={player_id}")
                                     return pickle.dumps(new_status)
                                 else:
                                     return pickle.dumps(current_status)
@@ -458,8 +451,7 @@ def create_new_game() -> None:
     global db
     global game
 
-    game_id = db.get_next_id('games')
-    db.insert('games', {})
+    game_id = db.insert('games', {})
     game = Game(db, game_id)
     print(f'New game created!\n')
 
@@ -467,37 +459,49 @@ def create_new_game() -> None:
 def clear_unnecessary_data_in_db() -> None:  # delete rows in chips, robots, rounds where there's a winner in the game
     global db, game
 
-    request_result = db.select_where_from_table('games', ['game_id'], {'winner_player_id': 'NULL'},
-                                                comparison_symbol='=')
+    request_result = db.execute_query("SELECT game_id FROM games WHERE winner IS Null")
+
     if request_result is None:
         return
     else:
         finished_game_ids = [game_id_tpl[0] for game_id_tpl in request_result]
         for c_game_id in finished_game_ids:
-            db.delete_where_from_table('chips', {'game_id': c_game_id})
-            db.delete_where_from_table('robots', {'game_id': c_game_id})
-            db.delete_where_from_table('rounds', {'game_id': c_game_id})
+            db.execute_query(f"DELETE FROM chips WHERE game_id={c_game_id}")
+            db.execute_query(f"DELETE FROM robots WHERE game_id={c_game_id}")
+            db.execute_query(f"DELETE FROM rounds WHERE game_id={c_game_id}")
         print(f"Cleared tables of game_ids: {finished_game_ids}")
 
 
 def finish_game():
     global game
-    db.update_where_from_table('games', {'player_count': overall_player_count}, {'game_id': game.game_id})
+    db.execute_query(f"UPDATE games SET player_count={overall_player_count} WHERE game_id={game.game_id}")
 
-    game_started_at: datetime = db.select_where_from_table('games', ['created_at'],
-                                                           {'game_id': game.game_id}, single_result=True)
+    game_started_at: datetime = db.execute_query(f"SELECT created_at FROM games WHERE game_id={game.game_id}")[0][0]
     duration = datetime.now() - game_started_at
     duration = duration.seconds
-    db.update_where_from_table('games', {'duration': duration}, {'game_id': game.game_id})
+    db.execute_query(f"UPDATE games SET duration={duration} WHERE game_id={game.game_id}")
 
     winner_player_id = game.get_best_player_id_in_game()
-    db.update_where_from_table('games', {'winner_player_id': winner_player_id}, {'game_id': game.game_id})
+    db.execute_query(f"UPDATE games SET winner={winner_player_id} WHERE game_id={game.game_id}")
 
     game = None
     create_new_game()
 
 
 # ----------------------------------------------------------------------------------------------------------------------
+
+import atexit
+
+
+def exit_handler():
+    db.close()
+    print('My application is ending!')
+
+
+atexit.register(exit_handler)
+
+# ----------------------------------------------------------------------------------------------------------------------
+
 import cProfile
 import pstats
 

@@ -17,6 +17,7 @@ class Robot:
         self.field_size = field_size
         self.current_node = current_node
         self.current_node.is_robot = True
+        self.in_use: bool = False
 
     def move(self, direction: str) -> bool:  # return True if the robot moved
         old_node = self.current_node
@@ -36,19 +37,16 @@ class Robot:
         old_node.is_robot = False
         self.current_node.is_robot = True
 
-        self.db.update_where_from_table('robots', {'position_column': self.current_node.get_position()['column']},
-                                        {'robot_id': self.robot_id})
-        self.db.update_where_from_table('robots', {'position_row': self.current_node.get_position()['row']},
-                                        {'robot_id': self.robot_id})
+        self.db.execute_query(
+            f"UPDATE robots SET position=({self.current_node.get_position()['column']},{self.current_node.get_position()['row']}) WHERE robot_id={self.robot_id}")
 
         if old_node == self.current_node:
             return False
         return True
 
     def get_position(self) -> dict:
-        column, row = \
-            self.db.select_where_from_table('robots', ['position_column', 'position_row'], {'robot_id': self.robot_id})[
-                0]
+        column, row = self.db.execute_query(f"SELECT position FROM robots WHERE robot_id={self.robot_id}")[
+            0].split(",")
         return {'column': int(column), 'row': int(row)}
 
     def set_position(self, _position: dict, grid, is_home=False) -> None:
@@ -59,21 +57,16 @@ class Robot:
             key_column = 'home_' + key_column
             key_row = 'home_' + key_row
 
-        self.db.update_where_from_table('robots', {key_column: _position['column'],
-                                                   key_row: _position['row']},
-                                        {'robot_id': self.robot_id})
+        self.db.execute_query(
+            f"UPDATE robots SET ({_position['column']},{_position['row']}) WHERE robot_id={self.robot_id}")
 
         self.current_node = grid[_position['row']][_position['column']]
 
     def create_obj_for_draw(self):
-        color = Colors.robot[self.db.select_where_from_table('robots', ['color_name'],
-                                                             {'game_id': self.game_id, 'robot_id': self.robot_id},
-                                                             single_result=True)]
+        color = Colors.robot[self.db.execute_query(
+            f"SELECT color_name FROM robots WHERE game_id={self.game_id} AND robot_id={self.robot_id}")[0][0]]
         position = self.current_node.get_position()
-        is_in_use = bool(
-            self.db.select_where_from_table('robots', ['in_use'], {'game_id': self.game_id, 'robot_id': self.robot_id},
-                                            single_result=True))
-        obj_robot_draw = RobotDraw(color, position, {'width': self.field_size, 'height': self.field_size}, is_in_use)
+        obj_robot_draw = RobotDraw(color, position, {'width': self.field_size, 'height': self.field_size}, self.in_use)
         return obj_robot_draw
 
 

@@ -1,6 +1,7 @@
 import os
 
 import mysql.connector
+import psycopg2
 
 
 def convert_str_to_list(input_str):  # '[red, green]' -> ['red', 'green']
@@ -8,11 +9,12 @@ def convert_str_to_list(input_str):  # '[red, green]' -> ['red', 'green']
 
 
 class SQL:
-    def __init__(self, host_id, user, password):
-        self.host_id: str = host_id
-        self.user: str = user
+    def __init__(self, host: str, username: str, password: str):
+        self.host: str = host
+        self.username: str = username
         self.password: str = password
-        self.db_name: str = "ricochet_robots"
+        self.database_name: str = "ricochet_robots"
+        self.port: int = 5432
 
         self.db = None
         self.cursor = None
@@ -21,17 +23,17 @@ class SQL:
 
     def connect_to_db(self):
         try:
-            self.db = mysql.connector.connect(
-                host=self.host_id,
-                user=self.user,
+            self.db = psycopg2.connect(
+                host=self.host,
+                port=self.port,
+                user=self.username,
                 password=self.password,
-                database=self.db_name
+                database=self.database_name
             )
         except mysql.connector.errors.DatabaseError:
             raise RuntimeError("Can't connect to database")
 
-        self.cursor = self.db.cursor(buffered=True)
-        self.cursor.execute("SET FOREIGN_KEY_CHECKS=0;")
+        self.cursor = self.db.cursor()
 
     def insert(self, table_name, column_value_pairs: dict):
         if len(column_value_pairs) != 0:  # dict not empty
@@ -59,88 +61,13 @@ class SQL:
 
         self.db.commit()
 
-        return f"{self.cursor.rowcount} record inserted."
-
-    def select_where_from_table(self, table_name, columns: list, statement_value_pairs: dict,
-                                single_result: bool = False,
-                                result_is_list_in_str_format: bool = False,
-                                comparison_symbol: str = '='):
-        columns = str(columns).replace("[", "").replace("]", "").replace("'", "")
-        query = f"SELECT {columns} FROM {table_name} WHERE "
-
-        for i, (statement, value) in enumerate(statement_value_pairs.items()):
-            if i != 0:
-                query += ' AND '
-            if value == 'NULL':
-                query += f"{statement} IS {'' if comparison_symbol == '=' else 'NOT'} NULL".replace('\"', '\'')
-            else:
-                value_for_query = value if type(value) != str else f"'{value}'"
-                query += f"{statement} {comparison_symbol} {value_for_query}".replace('\"', '\'')
-
-        query += ";"
-
-        self.cursor.execute(query)
-
         result = self.cursor.fetchall()
+        return result
 
-        if len(result) == 0:
-            return None
-        elif single_result:
-            if result_is_list_in_str_format:
-                return convert_str_to_list(result[0][0])
-            else:
-                return result[0][0]
-        else:
-            return result
-
-    def update_where_from_table(self, table_name, statement_value_pairs_set: dict, statement_value_pairs_where: dict):
-        query = f"UPDATE {table_name} " \
-                f"SET "
-
-        for i, (statement, value) in enumerate(statement_value_pairs_set.items()):
-            if i != 0:
-                query += ', '
-            value_for_query = value if type(value) != str else f"'{value}'"
-            query += f"{statement} = {value_for_query}".replace('\"', '\'')
-
-        query += " WHERE "
-
-        for i, (statement, value) in enumerate(statement_value_pairs_where.items()):
-            if i != 0:
-                query += ' AND '
-            value_for_query = value if type(value) != str else f"'{value}'"
-            query += f"{statement} = {value_for_query}".replace('\"', '\'')
-
-        query += ";"
-
-        self.cursor.execute(query)
-
-        self.db.commit()
-
-        return f"{self.cursor.rowcount} record(s) affected."
-
-    def delete_where_from_table(self, table_name, statement_value_pairs):
-        query = f"DELETE FROM {table_name} WHERE "
-
-        for i, (statement, value) in enumerate(statement_value_pairs.items()):
-            if i != 0:
-                query += ' AND '
-            query += f"{statement} = {value}".replace('\"', '\'')
-
-        query += ";"
-
-        self.cursor.execute(query)
-
-        self.db.commit()
-
-        # print(self.cursor_db.rowcount, "record(s) deleted")
-        return f"{self.cursor.rowcount} record(s) deleted."
-
-    def clear_table(self, table_name):
-        self.cursor.execute(f"TRUNCATE TABLE {table_name}")
-        self.db.commit()
-
-    def perform_sql_query(self, query: str):
+    def execute_query(self, query: str):
+        if not query.endswith(";"):
+            query += ";"
+        print(query)
         self.cursor.execute(query)
 
         self.db.commit()
@@ -149,21 +76,16 @@ class SQL:
         return result
 
     # ------------------------------------------------------------------------------------------------------------------
-    def get_next_id(self, table_name):
-        return self.select_where_from_table('information_schema.TABLES', ['AUTO_INCREMENT'],
-                                            {'table_schema': self.db_name, 'table_name': table_name},
-                                            single_result=True)
-
     def get_all_column_names(self, table_name) -> list:
-        result = self.select_where_from_table('INFORMATION_SCHEMA.COLUMNS', ['COLUMN_NAME'], {'TABLE_NAME': table_name})
+        result = self.execute_query(
+            f"SELECT COLUMN_NAME FROM information_schema.COLUMNS WHERE table_name='{table_name}'")
         result = [column[0] for column in result]
         return result  # e.g.: ['game_id', 'active_bots', 'created_at']
 
-    def clear_temporary_tables(self, game_id: int):
-        self.delete_where_from_table('players', {'game_id': game_id})
-        self.delete_where_from_table('chips', {'game_id': game_id})
-        self.delete_where_from_table('rounds', {'game_id': game_id})
+    def close(self):
+        self.db.close()
 
 
 if __name__ == '__main__':
-    db = SQL("localhost", "root", "")
+    db = SQL("localhost", 'root', 'root')
+    db.close()

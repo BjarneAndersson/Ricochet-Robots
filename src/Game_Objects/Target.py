@@ -71,20 +71,16 @@ class Target:
     def __init__(self, db: SQL, game_id: int, chip_id: int, node, position_grid_center: dict):
         self.db = db
         self.chip_id = chip_id
-        self.color_name = db.select_where_from_table('chips', ['color_name'],
-                                                     {'chip_id': self.chip_id, 'game_id': game_id},
-                                                     single_result=True)
+        self.color_name = self.db.execute_query(f"SELECT color_name FROM chips WHERE chip_id={self.chip_id}")[0][0]
         self.color: tuple = Colors.target[self.color_name]
-        self.symbol = db.select_where_from_table('chips', ['symbol'], {'chip_id': self.chip_id, 'game_id': game_id},
-                                                 single_result=True)
+        self.symbol = self.db.execute_query(f"SELECT symbol FROM chips WHERE chip_id={self.chip_id}")[0][0]
         self.node = node
         self.position = self.node.get_position()
         self.size = node.get_size()
         self.position_grid_center = position_grid_center
 
     def create_obj_for_draw(self):
-        is_revealed = bool(self.db.select_where_from_table('chips', ['revealed'], {'chip_id': self.chip_id},
-                                                           single_result=True))
+        is_revealed = bool(self.db.execute_query(f"SELECT revealed FROM chips WHERE chip_id={self.chip_id}")[0][0])
 
         obj_target_draw = TargetDraw(self.color, self.symbol, self.position, self.position_grid_center, self.size,
                                      is_revealed)

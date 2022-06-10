@@ -115,7 +115,7 @@ class Leaderboard:
         self.targets: list = targets
 
     def get_all_player_ids_in_game(self):
-        raw_query_player_ids = self.db.select_where_from_table('players', ['player_id'], {'game_id': self.game_id})
+        raw_query_player_ids = self.db.execute_query(f"SELECT player_id FROM players WHERE game_id={self.game_id}")
         if not raw_query_player_ids:
             return None
         return [int(player_id_tpl[0]) for player_id_tpl in raw_query_player_ids]
@@ -126,9 +126,9 @@ class Leaderboard:
             return
 
         for player_id in player_ids:
-            score = self.db.perform_sql_query(
+            score = self.db.execute_query(
                 f"SELECT COUNT(obtained_by_player_id) FROM chips WHERE obtained_by_player_id={player_id};")[0][0]
-            self.db.update_where_from_table('players', {'score': score}, {'player_id': player_id})
+            self.db.execute_query(f"UPDATE players SET score={score} WHERE player_id={player_id}")
 
     def get_all_players_who_have_scored(self):
         self.calc_score_for_players()
@@ -140,8 +140,7 @@ class Leaderboard:
         final_player_ids = []
 
         for player_id in unfiltered_player_ids:
-            player_score = int(
-                self.db.select_where_from_table('players', ['score'], {'player_id': player_id}, single_result=True))
+            player_score = int(self.db.execute_query(f"SELECT score FROM players WHERE player_id={player_id}")[0][0])
             if player_score != 0:
                 final_player_ids.append(player_id)
 
@@ -149,7 +148,7 @@ class Leaderboard:
 
     def get_all_target_ids_which_the_player_has_obtained(self, player_id):
         target_ids = [target_id_tpl[0] for target_id_tpl in
-                      self.db.select_where_from_table('chips', ['chip_id'], {'obtained_by_player_id': player_id})]
+                      self.db.execute_query(f"SELECT chip_id FROM chips WHERE obtained_by={player_id}")]
         return target_ids
 
     def create_obj_for_draw(self):
@@ -158,7 +157,8 @@ class Leaderboard:
 
         if scored_player_ids:
             for player_id in scored_player_ids:
-                name, score = self.db.select_where_from_table('players', ['name', 'score'], {'player_id': player_id})[0]
+
+                name, score = self.db.execute_query(f"SELECT name, score FROM players WHERE player_id={player_id}")[0]
 
                 target_ids_obtained_by_player = self.get_all_target_ids_which_the_player_has_obtained(player_id)
                 target_draw_objects: list = []

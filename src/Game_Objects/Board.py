@@ -38,20 +38,15 @@ class QuarterBoardYellow(QuarterBoard):
     def create_quarter_board(self):
         # target spaces
         db.insert('chips',
-                  {'game_id': game_id, 'color_name': 'blue', 'symbol': 'circle', 'position_column': 6,
-                   'position_row': 1})
+                  {'game_id': game_id, 'color_name': 'blue', 'symbol': 'circle', 'position': "(6,1)"})
         db.insert('chips',
-                  {'game_id': game_id, 'color_name': 'yellow', 'symbol': 'triangle', 'position_column': 1,
-                   'position_row': 3})
+                  {'game_id': game_id, 'color_name': 'yellow', 'symbol': 'triangle', 'position': "(1,3)"})
         db.insert('chips',
-                  {'game_id': game_id, 'color_name': 'green', 'symbol': 'square', 'position_column': 5,
-                   'position_row': 4})
+                  {'game_id': game_id, 'color_name': 'green', 'symbol': 'square', 'position': "(5,4)"})
         db.insert('chips',
-                  {'game_id': game_id, 'color_name': 'red', 'symbol': 'hexagon', 'position_column': 2,
-                   'position_row': 5})
+                  {'game_id': game_id, 'color_name': 'red', 'symbol': 'hexagon', 'position': "(2,5)"})
         db.insert('chips',
-                  {'game_id': game_id, 'color_name': 'all', 'symbol': 'spiral', 'position_column': 7,
-                   'position_row': 5})
+                  {'game_id': game_id, 'color_name': 'all', 'symbol': 'spiral', 'position': "(7,5)"})
 
         # walls
         # middle barrier
@@ -101,17 +96,13 @@ class QuarterBoardRed(QuarterBoard):
     def create_quarter_board(self):
         # target chips
         db.insert('chips',
-                  {'game_id': game_id, 'color_name': 'red', 'symbol': 'triangle', 'position_column': 14,
-                   'position_row': 1})
+                  {'game_id': game_id, 'color_name': 'red', 'symbol': 'triangle', 'position': "(14,1)"})
         db.insert('chips',
-                  {'game_id': game_id, 'color_name': 'blue', 'symbol': 'hexagon', 'position_column': 11,
-                   'position_row': 2})
+                  {'game_id': game_id, 'color_name': 'blue', 'symbol': 'hexagon', 'position': "(11,2)"})
         db.insert('chips',
-                  {'game_id': game_id, 'color_name': 'green', 'symbol': 'circle', 'position_column': 13,
-                   'position_row': 6})
+                  {'game_id': game_id, 'color_name': 'green', 'symbol': 'circle', 'position': "(13,6)"})
         db.insert('chips',
-                  {'game_id': game_id, 'color_name': 'yellow', 'symbol': 'square', 'position_column': 10,
-                   'position_row': 7})
+                  {'game_id': game_id, 'color_name': 'yellow', 'symbol': 'square', 'position': "(10,7)"})
 
         # walls
         # middle barrier
@@ -156,17 +147,13 @@ class QuarterBoardGreen(QuarterBoard):
     def create_quarter_board(self):
         # target chips
         db.insert('chips',
-                  {'game_id': game_id, 'color_name': 'yellow', 'symbol': 'hexagon', 'position_column': 3,
-                   'position_row': 9})
+                  {'game_id': game_id, 'color_name': 'yellow', 'symbol': 'hexagon', 'position': "(3,9)"})
         db.insert('chips',
-                  {'game_id': game_id, 'color_name': 'red', 'symbol': 'circle', 'position_column': 1,
-                   'position_row': 11})
+                  {'game_id': game_id, 'color_name': 'red', 'symbol': 'circle', 'position': "(1,11)"})
         db.insert('chips',
-                  {'game_id': game_id, 'color_name': 'blue', 'symbol': 'square', 'position_column': 6,
-                   'position_row': 12})
+                  {'game_id': game_id, 'color_name': 'blue', 'symbol': 'square', 'position': "(6,12)"})
         db.insert('chips',
-                  {'game_id': game_id, 'color_name': 'green', 'symbol': 'triangle', 'position_column': 2,
-                   'position_row': 14})
+                  {'game_id': game_id, 'color_name': 'green', 'symbol': 'triangle', 'position': "(2,14)"})
 
         # walls
         # middle barrier
@@ -211,17 +198,13 @@ class QuarterBoardBlue(QuarterBoard):
     def create_quarter_board(self):
         # target chips
         db.insert('chips',
-                  {'game_id': game_id, 'color_name': 'blue', 'symbol': 'triangle', 'position_column': 13,
-                   'position_row': 9})
+                  {'game_id': game_id, 'color_name': 'blue', 'symbol': 'triangle', 'position': "(13,9)"})
         db.insert('chips',
-                  {'game_id': game_id, 'color_name': 'yellow', 'symbol': 'circle', 'position_column': 9,
-                   'position_row': 11})
+                  {'game_id': game_id, 'color_name': 'yellow', 'symbol': 'circle', 'position': "(9,11)"})
         db.insert('chips',
-                  {'game_id': game_id, 'color_name': 'red', 'symbol': 'square', 'position_column': 14,
-                   'position_row': 13})
+                  {'game_id': game_id, 'color_name': 'red', 'symbol': 'square', 'position': "(14,13)"})
         db.insert('chips',
-                  {'game_id': game_id, 'color_name': 'green', 'symbol': 'hexagon', 'position_column': 10,
-                   'position_row': 14})
+                  {'game_id': game_id, 'color_name': 'green', 'symbol': 'hexagon', 'position': "(10,14)"})
 
         # walls
         # middle barrier
@@ -312,12 +295,11 @@ class Board:
                 self.grid[wall.position_node2['row']][wall.position_node2['column']].set_wall(wall.direction_node2)
 
     def create_targets(self) -> None:
-        chip_ids = db.select_where_from_table('chips', ['chip_id'], {'game_id': game_id})
+        chip_ids = db.execute_query(f"SELECT chip_id FROM chips WHERE game_id={game_id}")
         chip_ids = [chip_id[0] for chip_id in chip_ids]
         for chip_id in chip_ids:
-            target_position = \
-            db.select_where_from_table('chips', ['position_column', 'position_row'], {'chip_id': chip_id})[0]
-            target_position = {'column': target_position[0], 'row': target_position[1]}
+            target_position = db.execute_query(f"SELECT position FROM chips WHERE chip_id={chip_id}")[0][0].split(",")
+            target_position = {'column': int(target_position[0]), 'row': int(target_position[1])}
             node = self.grid[target_position['row']][target_position['column']]
             self.targets.append(Target(db, game_id, chip_id, node, self.get_position_grid_center()))
 
