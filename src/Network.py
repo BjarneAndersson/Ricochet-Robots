@@ -18,17 +18,18 @@ class Network:
             print(e)
 
     def send(self, data):
+        send_data = data
         try:
-            self.amount_data_send += len(str(data).encode())
-            self.client.send(str.encode(data))
+            self.amount_data_send += len(str(send_data).encode())
+            self.client.send(str.encode(send_data))
 
-            data = self.client.recv(4096 * 8)
-            self.amount_data_recv += len(data)
+            recv_data = self.client.recv(4096 * 8)
+            self.amount_data_recv += len(recv_data)
 
             try:
-                return pickle.loads(data)
+                return pickle.loads(recv_data)
             except pickle.UnpicklingError as e:
-                return data.decode()
+                return recv_data.decode()
 
         except OSError as e:
             print(e)
