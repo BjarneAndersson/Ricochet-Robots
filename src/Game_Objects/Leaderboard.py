@@ -127,7 +127,7 @@ class Leaderboard:
 
         for player_id in player_ids:
             score = self.db.execute_query(
-                f"SELECT COUNT(obtained_by_player_id) FROM chips WHERE obtained_by_player_id={player_id};")[0][0]
+                f"SELECT COUNT(obtained_by) FROM chips WHERE obtained_by={player_id};")[0][0]
             self.db.execute_query(f"UPDATE players SET score={score} WHERE player_id={player_id}")
 
     def get_all_players_who_have_scored(self):
