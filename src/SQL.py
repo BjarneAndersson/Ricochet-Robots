@@ -43,8 +43,11 @@ class SQL:
 
         self.db.commit()
 
-        result = self.cursor.fetchall()
-        return result
+        try:
+            result = self.cursor.fetchall()
+            return result
+        except psycopg2.ProgrammingError as e:
+            return None
 
     # ------------------------------------------------------------------------------------------------------------------
     def get_all_column_names(self, table_name) -> list:
