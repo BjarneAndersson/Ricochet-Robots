@@ -81,8 +81,8 @@ class IndividualSolution:
         self.input_field.draw(window)
 
         # player solution
-        player_solution = int(self.network.send(f"GET user/{self.player_id}/solution"))
-        if player_solution == -1 or self.input_field.active:  # show nothing
+        player_solution = self.network.send(f"GET user/{self.player_id}/solution")
+        if player_solution or self.input_field.active:  # show nothing
             pass
             # pygame.draw.rect(window, Colors.individual_solution['fill'],
             #                  (self.position['x'] + 2,
