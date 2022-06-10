@@ -112,6 +112,7 @@ def main():
     print("Connected to server!")
 
     player_id = int(network.send(f"POST user/new?name={player_name}"))
+    # print(player_id)
 
     font = pygame.freetype.SysFont('Comic Sans MS', 0)
 
