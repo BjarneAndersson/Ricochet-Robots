@@ -170,7 +170,7 @@ def service_connection(key, mask):
             db.execute_query(f"UPDATE games SET player_count={active_player_count} WHERE game_id={game.game_id}")
     if mask & selectors.EVENT_WRITE:
         if data.outb:
-            sent = sock.send(data.outb)  # Should be ready to write
+            sent = sock.send(data.outb)
             data.outb = data.outb[sent:]
 
 
@@ -183,6 +183,8 @@ def process_data(data: str):
     :param data: incoming data stream
     :return:
     """
+
+    print(f"Data:   {data}")
 
     action: str
     path: list
