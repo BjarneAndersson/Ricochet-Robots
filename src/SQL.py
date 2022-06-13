@@ -1,6 +1,5 @@
 import os
 
-import mysql.connector
 import psycopg2
 
 
@@ -30,7 +29,7 @@ class SQL:
                 password=self.password,
                 database=self.database_name
             )
-        except mysql.connector.errors.DatabaseError:
+        except psycopg2.ProgrammingError:
             raise RuntimeError("Can't connect to database")
 
         self.cursor = self.db.cursor()
