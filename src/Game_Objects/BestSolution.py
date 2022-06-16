@@ -59,7 +59,7 @@ class BestSolution:
             f"SELECT player_id, solution FROM players WHERE game_id={self.game_id}")  # get all player in game
         if all_player_ids_and_solutions_in_game:
             all_player_ids_and_solutions_in_game = list(
-                filter(lambda x: x[1] != -1,
+                filter(lambda x: x[1] != None,
                        all_player_ids_and_solutions_in_game))  # filter out player without a solution
             all_player_ids_and_solutions_in_game.sort(key=lambda x: x[1])  # sort after solution
             if len(all_player_ids_and_solutions_in_game) != 0:
