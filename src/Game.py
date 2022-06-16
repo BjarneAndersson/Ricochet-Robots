@@ -209,7 +209,7 @@ class Game:
         # insert round
         current_timestamp = str(datetime.now()).split(".")[0]
         round_id = self.db.execute_query(
-            f"INSERT INTO rounds (game_id, round_number, chip_id, started_at) VALUES ({self.game_id},{self.get_new_round_number()},{self.choose_rand_chip()},{current_timestamp}) RETURNING round_id;")[
+            f"INSERT INTO rounds (game_id, round_number, chip_id, started_at) VALUES ({self.game_id},{self.get_new_round_number()},{self.choose_rand_chip()},'{current_timestamp}') RETURNING round_id;")[
             0][0]
 
         self.round_id = self.db.execute_query(
