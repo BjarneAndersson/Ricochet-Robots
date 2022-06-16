@@ -1,4 +1,7 @@
+import cProfile
 import os
+import pstats
+import timeit
 
 os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = "hide"
 
@@ -141,18 +144,14 @@ def main():
     run: bool = True
 
     try:
-        i = 0
         while run:
-            clock.tick(frame_rate)  # 30 fps
-            i += 1
-            if i == 30:
-                i = 0
-                print(
-                    f"Data send: {network.amount_data_send / 1000}[kB/sec] | Data receive: {network.amount_data_recv / 1000}[kB/sec]")
-                network.amount_data_send = 0
-                network.amount_data_recv = 0
+            clock.tick(frame_rate)
+            print(f"FPS: {clock.get_fps()}")
 
+            t_draw_s = timeit.default_timer()
             draw()
+            t_draw_e = timeit.default_timer()
+            print(f"Time | draw: {t_draw_e - t_draw_s}")
 
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -188,6 +187,7 @@ def main():
 
                     # check: mouse click on ready button
                     elif is_position_on_ready_button(mouse_position):
+                        break
                         is_pressed = network.send(
                             f"POST user/{player_id}/change_status_next_round")  # return state of global ready button
                         ready_button.set_state(is_pressed)
@@ -227,10 +227,15 @@ def main():
 if __name__ == '__main__':
     # ip_server = input("IP-address of the server: ")
     port_server = int(input("Port of the server: "))
-    server: dict = {"ip": "172.31.128.1", "port": port_server}
+    server: dict = {"ip": "192.168.1.113", "port": port_server}
     # server: dict = {'ip': ip_server, 'port': port_server}
 
     # player_name = input('Please enter your name: ')
     player_name = 'PC'
 
-    main()
+    profile = cProfile.Profile()
+    profile.runcall(main)
+    ps = pstats.Stats(profile)
+    ps.sort_stats('tottime')
+    ps.print_stats(20)
+    # main()
