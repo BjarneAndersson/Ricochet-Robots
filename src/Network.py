@@ -1,5 +1,6 @@
 import pickle
 import socket
+import timeit
 
 
 class Network:
@@ -8,8 +9,6 @@ class Network:
         self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.address: tuple = (server_ip, server_port)
         self.connect()
-
-        self.amount_data_send, self.amount_data_recv = 0, 0
 
     def connect(self):
         try:
@@ -20,11 +19,12 @@ class Network:
     def send(self, data):
         send_data = data
         try:
-            self.amount_data_send += len(str(send_data).encode())
             self.client.send(str.encode(send_data))
-
+            t_recv_s = timeit.default_timer()
             recv_data = self.client.recv(4096 * 8)
-            self.amount_data_recv += len(recv_data)
+            t_recv_e = timeit.default_timer()
+            print(f"Time | recv: {t_recv_e - t_recv_s}")
+            print(f"Data: {recv_data}")
 
             try:
                 return pickle.loads(recv_data)
