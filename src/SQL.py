@@ -37,7 +37,6 @@ class SQL:
     def execute_query(self, query: str):
         if not query.endswith(";"):
             query += ";"
-        print(f"SQL:    {query}")
         self.cursor.execute(query)
 
         self.db.commit()
