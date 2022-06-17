@@ -38,7 +38,7 @@ class Robot:
         self.current_node.is_robot = True
 
         self.db.execute_query(
-            f"UPDATE robots SET position=({self.current_node.get_position()['column']},{self.current_node.get_position()['row']}) WHERE robot_id={self.robot_id}")
+            f"UPDATE robots SET position='({self.current_node.get_position()['column']},{self.current_node.get_position()['row']})' WHERE robot_id={self.robot_id}")
 
         if old_node == self.current_node:
             return False
@@ -47,7 +47,7 @@ class Robot:
     def get_position(self) -> dict:
         position = Converters.db_position_to_position(
             self.db.execute_query(f"SELECT position FROM robots WHERE robot_id={self.robot_id}")[
-                0])
+                0][0])
         return position
 
     def set_position(self, _position: dict, grid, is_home=False) -> None:
@@ -59,7 +59,7 @@ class Robot:
             key_row = 'home_' + key_row
 
         self.db.execute_query(
-            f"UPDATE robots SET ({_position['column']},{_position['row']}) WHERE robot_id={self.robot_id}")
+            f"UPDATE robots SET {key}='({_position['column']},{_position['row']})' WHERE robot_id={self.robot_id}")
 
         self.current_node = grid[_position['row']][_position['column']]
 
