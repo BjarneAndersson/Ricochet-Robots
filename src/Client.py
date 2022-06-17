@@ -143,15 +143,15 @@ def main():
     clock = pygame.time.Clock()
     run: bool = True
 
+    all_fps: list = []
+
     try:
         while run:
             clock.tick(frame_rate)
-            print(f"FPS: {clock.get_fps()}")
+            c_fps = clock.get_fps()
+            all_fps.append(c_fps)
 
-            t_draw_s = timeit.default_timer()
             draw()
-            t_draw_e = timeit.default_timer()
-            print(f"Time | draw: {t_draw_e - t_draw_s}")
 
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -187,7 +187,6 @@ def main():
 
                     # check: mouse click on ready button
                     elif is_position_on_ready_button(mouse_position):
-                        break
                         is_pressed = network.send(
                             f"POST user/{player_id}/change_status_next_round")  # return state of global ready button
                         ready_button.set_state(is_pressed)
@@ -222,6 +221,7 @@ def main():
     finally:
         pygame.quit()
         print("Connection lost")
+        print(f"Avg. fps: {sum(all_fps) / len(all_fps)}")
 
 
 if __name__ == '__main__':
