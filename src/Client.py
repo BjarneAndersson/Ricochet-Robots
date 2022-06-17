@@ -216,8 +216,8 @@ def main():
         print(pygame_error)
         print("Connection closed")
     except Exception as e:
-        print(e)
-        raise RuntimeError("Game crashed")
+        print(e.with_traceback())
+        print("Game crashed")
     finally:
         pygame.quit()
         print("Connection lost")
