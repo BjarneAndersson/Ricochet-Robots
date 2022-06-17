@@ -100,7 +100,7 @@ def main():
                 phase = Phases.ROUND_EVALUATE_ACTIVE_PLAYER
 
         elif phase == Phases.ROUND_EVALUATE_ACTIVE_PLAYER:
-            game.active_player_id = game.get_best_player_id_in_round()
+            game.active_player_id = game.get_best_player_round()
             if not game.active_player_id:
                 print('Skipping target chip!')
                 phase = Phases.ROUND_FINISH
