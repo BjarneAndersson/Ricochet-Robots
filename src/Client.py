@@ -175,7 +175,7 @@ def main():
                         if network.send("GET game/round/phase/move_robots"):
                             if player_id == network.send('GET user/active_player_id'):  # check: select robot
                                 network.send(
-                                    f"POST game/robots/select?position_x={mouse_position['x']}&position_y={mouse_position['y']}")
+                                    f"POST game/robots/select?position=({mouse_position['x']},{mouse_position['y']})")
 
                     # check: mouse click on client input field
                     elif is_position_on_input_field(mouse_position):
