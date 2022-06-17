@@ -357,18 +357,18 @@ def process_requests(data: str) -> bytes:
         else:  # action == 'POST'
             if path[0] == 'game':
                 if path[1] == 'robots':
-                    if path[2] == 'select':  # 'POST game/robots/select?position_x=x&position_y=y
+                    if path[2] == 'select':  # "POST game/robots/select?position='(x,y)'"
                         if len(path) == 3:
-                            if game.selected_robot:
-                                game.unselect_robot()
-                            node_at_position = game.board.get_node(
-                                {'x': int(queries['position_x']), 'y': int(queries['position_y'])})
-                            grid_position = node_at_position.get_position()
+                            game.unselect_robot()
+                            position = Converters.screen_position_to_position(queries['position'])
+                            grid_position = game.board.get_node(position).get_position().copy()
+                            grid_position.pop("x")
+                            grid_position.pop("y")
+                            print(grid_position)
                             try:
-                                game.selected_robot = [robot for robot in game.robots if
-                                                       robot.get_position()['column'] == grid_position[
-                                                           'column'] and
-                                                       robot.get_position()['row'] == grid_position['row']][0]
+                                robot = [robot for robot in game.robots if
+                                         robot.get_position() == grid_position][0]
+                                game.select_robot(robot)
                             except IndexError:
                                 game.unselect_robot()
                             return str(200).encode()
