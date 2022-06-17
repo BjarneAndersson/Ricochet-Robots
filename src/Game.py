@@ -315,3 +315,6 @@ class Game:
         all_player_ids_and_scores_in_game.sort(key=lambda x: x[1], reverse=True)  # sort after scores
         best_player_id = all_player_ids_and_scores_in_game[0][0]
         return best_player_id
+
+    def finish_game(self):
+        pass
