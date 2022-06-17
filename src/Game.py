@@ -240,16 +240,18 @@ class Game:
     def pass_active_status_on_to_next_player_in_solution_list(self):
         self.db.execute_query(f"UPDATE players SET solution=Null WHERE player_id={self.active_player_id}")
         self.active_player_id = None
-        if self.selected_robot:
-            self.unselect_robot()
+        self.selected_robot.current_node.is_robot = False
+        self.unselect_robot()
 
         # move robots to home
         for robot in self.robots:
             robot_home_position = \
-            self.db.execute_query(f"SELECT home_position FROM robots WHERE robot_id={robot.robot_id}")[0][0].split(",")
-            robot.set_position({'column': int(robot_home_position[0]), 'row': int(robot_home_position[1])},
+                Converters.db_position_to_position(
+                    self.db.execute_query(f"SELECT home_position FROM robots WHERE robot_id={robot.robot_id}")[0][0])
+            robot.set_position(robot_home_position,
                                self.board.grid,
                                is_home=False)
+            robot.current_node.is_robot = True
 
     def finish_round(self):
         self.is_round_active = False
