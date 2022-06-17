@@ -48,7 +48,6 @@ class Game:
             self.board_offset['left'] + self.board.rect.width + self.board_offset['right'],
             self.board_offset['top'] + self.board.rect.height + self.board_offset['bottom'])
 
-
         # variables needed for rounds
         self.is_round_active: bool = False
         self.round_number: int = 0
