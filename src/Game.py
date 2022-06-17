@@ -170,12 +170,11 @@ class Game:
             self.selected_robot.in_use = False
         self.selected_robot = None
 
-    def get_is_round_ready(self) -> bool:
-        player_count_ready_for_round_raw = self.db.execute_query(
-            f"SELECT player_id FROM players WHERE game_id={self.game_id} AND ready_for_round=True")
-        if not player_count_ready_for_round_raw:
+    def get_is_round_ready(self) -> bool:  # players_ready >= all_players / 2
+        player_count_ready_for_round = self.db.execute_query(
+            f"SELECT Count(player_id) FROM players WHERE game_id={self.game_id} AND ready_for_round=True")[0][0]
+        if not player_count_ready_for_round:
             return False
-        player_count_ready_for_round = len([player_id_tpl[0] for player_id_tpl in player_count_ready_for_round_raw])
         return self.ready and player_count_ready_for_round >= \
                self.db.execute_query(f"SELECT player_count FROM games WHERE game_id={self.game_id}")[0][0] // 2
 
@@ -208,46 +207,36 @@ class Game:
 
         # insert round
         current_timestamp = str(datetime.now()).split(".")[0]
-        round_id = self.db.execute_query(
+        self.round_id = self.db.execute_query(
             f"INSERT INTO rounds (game_id, round_number, chip_id, started_at) VALUES ({self.game_id},{self.get_new_round_number()},{self.choose_rand_chip()},'{current_timestamp}') RETURNING round_id;")[
             0][0]
 
-        self.round_id = self.db.execute_query(
-            f"SELECT round_id FROM rounds WHERE game_id={self.game_id} AND round_number={self.round_number}")[0][0]
-
         chip_id = self.db.execute_query(f"SELECT chip_id FROM rounds WHERE round_id={self.round_id}")[0][0]
-        # update db - reveal chip
         self.db.execute_query(f"UPDATE chips SET revealed=True WHERE chip_id={chip_id}")
 
         self.set_global_ready_button_state(True)
 
     def check_robot_on_target(self):
         if self.selected_robot:
-            active_chip_id, chip_color_name, active_chip_position = \
+            active_chip_id, chip_color_name, chip_position_raw = \
                 self.db.execute_query(
                     f"SELECT chip_id, color_name, position FROM chips WHERE game_id={self.game_id} AND revealed=True")[
                     0]
+            chip_position = Converters.db_position_to_position(chip_position_raw)
 
-            robot_color_name = self.db.execute_query(
-                f"SELECT color_name FROM robots WHERE robot_id={self.selected_robot.robot_id}")[0][0]
-            active_robot_position = self.selected_robot.get_position()
+            robot_color_name, robot_position_str = self.db.execute_query(
+                f"SELECT color_name, position FROM robots WHERE robot_id={self.selected_robot.robot_id}")[0]
+            robot_position = Converters.db_position_to_position(robot_position_str)
 
-            if active_chip_position == active_robot_position and chip_color_name == robot_color_name:
+            if chip_position == robot_position and chip_color_name == robot_color_name:
                 return True
         return False
 
-    def get_best_player_id_in_round(self) -> int:
-        all_player_ids_and_solutions_in_game: list = self.db.execute_query(
-            f"SELECT player_id, solution FROM players WHERE game_id={self.game_id}")  # get all player in game
-        if all_player_ids_and_solutions_in_game:
-            all_player_ids_and_solutions_in_game = list(
-                filter(lambda x: x[1] != -1,
-                       all_player_ids_and_solutions_in_game))  # filter out player without a solution
-            all_player_ids_and_solutions_in_game.sort(key=lambda x: x[1])  # sort after solution
-            if len(all_player_ids_and_solutions_in_game) != 0:
-                best_player_id = all_player_ids_and_solutions_in_game[0][0]
-                return best_player_id
-        return None
+    def get_best_player_round(self) -> int:
+        result = self.db.execute_query(
+            f"SELECT player_id FROM players WHERE game_id={self.game_id} AND solution IS NOT NULL ORDER BY solution ASC, last_solution_change ASC LIMIT 1")
+        print(result)
+        return result[0][0] if result else None
 
     def pass_active_status_on_to_next_player_in_solution_list(self):
         self.db.execute_query(f"UPDATE players SET solution=Null WHERE player_id={self.active_player_id}")
@@ -290,9 +279,9 @@ class Game:
 
         # move robots to home
         for robot in self.robots:
-            robot_home_position = \
-            self.db.execute_query(f"SELECT home_position FROM robots WHERE robot_id={robot.robot_id}")[0].split(",")
-            robot.set_position({'column': int(robot_home_position[0]), 'row': int(robot_home_position[1])},
+            robot_home_position = Converters.db_position_to_position(
+                self.db.execute_query(f"SELECT home_position FROM robots WHERE robot_id={robot.robot_id}")[0][0])
+            robot.set_position(robot_home_position,
                                self.board.grid)
 
         round_started_at: datetime = \
@@ -304,8 +293,7 @@ class Game:
         self.active_player_id = None
         self.active_player_solution = None
 
-        if self.selected_robot:
-            self.unselect_robot()
+        self.unselect_robot()
 
         self.hourglass.reset()
 
