@@ -421,7 +421,7 @@ def process_requests(data: str) -> bytes:
                     elif path[2] == 'name':
                         if len(path) == 3:  # 'POST user/<n>/name?value=<x>'
                             name = queries['value']
-                            db.execute_query(f"UPDATE players SET name={name} WHERE player_id={player_id}")
+                            db.execute_query(f"UPDATE players SET name='{name}' WHERE player_id={player_id}")
                             return str(200).encode()
 
                     elif path[2] == 'change_status_next_round':  # 'POST user/{id}/change_status_next_round'
