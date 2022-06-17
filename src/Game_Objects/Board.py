@@ -4,14 +4,14 @@ from .Node import Node
 from .Target import Target
 from .Wall import Wall
 
-from src.SQL import SQL
+from src.SQL import MySQL, PostgreSQL
 
 try:
     from src.Helpers import Colors, Converters
 except ModuleNotFoundError:
     from Helpers import Colors
 
-db: SQL
+db: MySQL | PostgreSQL
 game_id: int
 
 

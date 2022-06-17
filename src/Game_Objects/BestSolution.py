@@ -1,6 +1,6 @@
 import pygame
 
-from src.SQL import SQL
+from src.SQL import MySQL, PostgreSQL
 
 try:
     from src.Helpers import Colors
@@ -48,8 +48,8 @@ class BestSolutionDraw:
 
 class BestSolution:
 
-    def __init__(self, db, game_id, position: dict, size: dict):
-        self.db: SQL = db
+    def __init__(self, db: MySQL | PostgreSQL, game_id, position: dict, size: dict):
+        self.db: MySQL | PostgreSQL = db
         self.game_id = game_id
         self.position = position
         self.size = size

@@ -2,7 +2,7 @@ from math import cos
 from math import pi
 from math import sin
 from src.Helpers import Colors
-from src.SQL import SQL
+from src.SQL import MySQL, PostgreSQL
 import pygame
 
 
@@ -68,11 +68,11 @@ class TargetDraw:
 
 
 class Target:
-    def __init__(self, db: SQL, game_id: int, chip_id: int, node, position_grid_center: dict):
-        self.db = db
+    def __init__(self, db: MySQL | PostgreSQL, game_id: int, chip_id: int, node, position_grid_center: dict):
+        self.db: MySQL | PostgreSQL = db
         self.chip_id = chip_id
         self.color_name, self.symbol = \
-        self.db.execute_query(f"SELECT color_name, symbol FROM chips WHERE chip_id={self.chip_id}")[0]
+            self.db.execute_query(f"SELECT color_name, symbol FROM chips WHERE chip_id={self.chip_id}")[0]
         self.color: tuple = Colors.target[self.color_name]
         self.node = node
         self.position = self.node.get_position()

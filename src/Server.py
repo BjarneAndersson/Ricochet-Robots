@@ -15,7 +15,7 @@ from enum import Enum, auto
 
 from Game import Game
 from Helpers import Colors
-from SQL import SQL
+from SQL import MySQL, PostgreSQL
 
 sel = selectors.DefaultSelector()
 
@@ -31,7 +31,7 @@ class Phases(Enum):
     GAME_FINISH = auto()
 
 
-db: SQL
+db: MySQL | PostgreSQL
 active_player_count: int = 0
 overall_player_count: int = 0
 game: Game
@@ -64,7 +64,8 @@ def main():
     s.setblocking(False)
     sel.register(s, selectors.EVENT_READ, data=None)
 
-    db = SQL("localhost", "root", "root")
+    db = MySQL("localhost", "root", "")
+    # db = PostgreSQL("localhost", "root", "root")
 
     # clear_unnecessary_data_in_db()
 

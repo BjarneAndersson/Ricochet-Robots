@@ -9,7 +9,7 @@ from Game_Objects import MenuButton
 from Game_Objects import BestSolution
 from Game_Objects import Robot
 
-from SQL import SQL
+from SQL import MySQL, PostgreSQL
 from src.Helpers import Converters
 
 
@@ -18,8 +18,8 @@ class Game:
     COLUMNS: int = 16
     FIELD_SIZE: int = 50  # pixels
 
-    def __init__(self, db: SQL, game_id: int):
-        self.db: SQL = db
+    def __init__(self, db: MySQL | PostgreSQL, game_id: int):
+        self.db: MySQL | PostgreSQL = db
         self.game_id: int = game_id
         self.round_id: int = None
         self.ready: bool = False

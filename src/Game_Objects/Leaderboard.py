@@ -1,4 +1,4 @@
-from src.SQL import SQL
+from src.SQL import MySQL, PostgreSQL
 import pygame
 
 try:
@@ -106,8 +106,9 @@ class LeaderboardDraw:
 
 
 class Leaderboard:
-    def __init__(self, db: SQL, game_id: int, position: dict, size: dict, field_size: int, targets: list):
-        self.db: SQL = db
+    def __init__(self, db: MySQL | PostgreSQL, game_id: int, position: dict, size: dict, field_size: int,
+                 targets: list):
+        self.db: MySQL | PostgreSQL = db
         self.game_id: int = game_id
         self.position: dict = position
         self.size: dict = size

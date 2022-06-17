@@ -1,7 +1,7 @@
 import pygame
 
 from .Node import Node
-from src.SQL import SQL
+from src.SQL import MySQL, PostgreSQL
 
 try:
     from src.Helpers import Colors, Converters
@@ -10,8 +10,8 @@ except ModuleNotFoundError:
 
 
 class Robot:
-    def __init__(self, db, game_id, robot_id, field_size, current_node):
-        self.db: SQL = db
+    def __init__(self, db: MySQL | PostgreSQL, game_id, robot_id, field_size, current_node):
+        self.db: MySQL | PostgreSQL = db
         self.game_id = game_id
         self.robot_id = robot_id
         self.field_size = field_size
