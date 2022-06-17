@@ -255,11 +255,11 @@ class Game:
 
     def finish_round(self):
         self.is_round_active = False
-        chip_id = self.db.execute_query(f"SELECT chip_id FROM rounds WHERE round_id={self.round_id}")[0][0]
+        active_chip_id = self.db.execute_query(f"SELECT chip_id FROM rounds WHERE round_id={self.round_id}")[0][0]
 
         if self.active_player_id:  # if solution was found
             self.db.execute_query(
-                f"UPDATE chips SET revealed=False AND obtained_by={self.active_player_id} WHERE chip_id={chip_id}")
+                f"UPDATE chips SET revealed=False AND obtained_by={self.active_player_id} WHERE chip_id={active_chip_id}")
 
             # update db - player score
             player_old_score = int(
@@ -273,10 +273,10 @@ class Game:
 
             # update db for round
             self.db.execute_query(
-                f"UPDATE rounds SET solution={player_old_score + 1} AND winner={self.active_player_id} WHERE round_id={self.round_id}")
+                f"UPDATE rounds SET solution={self.active_player_solution} AND winner={self.active_player_id} WHERE round_id={self.round_id}")
         else:
             self.db.execute_query(
-                f"UPDATE chips SET revealed=False WHERE chip_id={chip_id}")
+                f"UPDATE chips SET revealed=False WHERE chip_id={active_chip_id}")
 
         # move robots to home
         for robot in self.robots:
@@ -286,7 +286,7 @@ class Game:
                                self.board.grid)
 
         round_started_at: datetime = \
-        self.db.execute_query(f"SELECT started_at FROM rounds WHERE round_id={self.round_id}")[0][0]
+            self.db.execute_query(f"SELECT started_at FROM rounds WHERE round_id={self.round_id}")[0][0]
         duration = datetime.now() - round_started_at
         duration = duration.seconds
         self.db.execute_query(f"UPDATE rounds SET duration={duration} WHERE round_id={self.round_id}")
