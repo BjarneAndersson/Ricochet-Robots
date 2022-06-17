@@ -1,5 +1,7 @@
 import os
 
+from src.Helpers import Converters
+
 os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = "hide"  # hide pycharm import msg
 
 import pickle
@@ -87,11 +89,8 @@ def main():
 
         elif phase == Phases.ROUND_STARTED:
             # check: sb. submitted a solution
-            all_solutions_in_game = [solution_tpl[0] for solution_tpl in
-                                     db.execute_query(f"SELECT solution FROM players WHERE game_id={game.game_id}")]
-            all_valid_solutions = list(filter(lambda x: x != -1, all_solutions_in_game))
-
-            if all_valid_solutions:  # if there is a valid submitted solution
+            if db.execute_query(
+                    f"SELECT solution FROM players WHERE game_id={game.game_id} AND solution IS NOT Null"):  # if there is a valid submitted solution
                 game.hourglass.start_timer()
                 phase = Phases.ROUND_COLLECT_SOLUTIONS
 
@@ -185,7 +184,7 @@ def process_data(data: str):
     :return:
     """
 
-    print(f"Data:   {data}")
+    # print(f"Data:   {data}")
 
     action: str
     path: list
