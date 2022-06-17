@@ -1,13 +1,56 @@
-import os
-
 import psycopg2
+import mysql.connector
 
 
-def convert_str_to_list(input_str):  # '[red, green]' -> ['red', 'green']
-    return input_str.replace("[", "").replace("]", "").split(",")
+class MySQL:
+    def __init__(self, host: str, username: str, password: str):
+        self.host: str = host
+        self.username: str = username
+        self.password: str = password
+        self.database_name: str = "ricochet_robots"
+
+        self.db = None
+        self.cursor = None
+
+        self.connect_to_db()
+
+    def connect_to_db(self):
+        try:
+            self.db = mysql.connector.connect(
+                host=self.host,
+                user=self.username,
+                password=self.password,
+                database=self.database_name
+            )
+        except mysql.connector.ProgrammingError:
+            raise RuntimeError("Can't connect to database")
+
+        self.cursor = self.db.cursor(buffered=True)
+
+    def execute_query(self, query: str):
+        if not query.endswith(";"):
+            query += ";"
+
+        if query.startswith("INSERT"):
+            query = query.split(" RETURNING ")[0] + ";"
+            self.cursor.execute(query)
+            query = "SELECT LAST_INSERT_ID();"
+
+        self.cursor.execute(query)
+
+        self.db.commit()
+
+        try:
+            result = self.cursor.fetchall()
+            return result
+        except mysql.connector.errors.InterfaceError:
+            return None
+
+    def close(self):
+        self.db.close()
 
 
-class SQL:
+class PostgreSQL:
     def __init__(self, host: str, username: str, password: str):
         self.host: str = host
         self.username: str = username
@@ -44,7 +87,7 @@ class SQL:
         try:
             result = self.cursor.fetchall()
             return result
-        except psycopg2.ProgrammingError as e:
+        except psycopg2.ProgrammingError:
             return None
 
     def close(self):
@@ -52,5 +95,5 @@ class SQL:
 
 
 if __name__ == '__main__':
-    db = SQL("localhost", 'root', 'root')
+    db = PostgreSQL("localhost", 'root', 'root')
     db.close()
