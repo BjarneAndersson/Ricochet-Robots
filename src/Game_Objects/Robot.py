@@ -51,12 +51,11 @@ class Robot:
         return position
 
     def set_position(self, _position: dict, grid, is_home=False) -> None:
-        key_column = 'position_column'
-        key_row = 'position_row'
 
-        if is_home:
-            key_column = 'home_' + key_column
-            key_row = 'home_' + key_row
+        if not is_home:
+            key = "position"
+        else:
+            key = "home_position"
 
         self.db.execute_query(
             f"UPDATE robots SET {key}='({_position['column']},{_position['row']})' WHERE robot_id={self.robot_id}")
