@@ -47,13 +47,6 @@ class SQL:
         except psycopg2.ProgrammingError as e:
             return None
 
-    # ------------------------------------------------------------------------------------------------------------------
-    def get_all_column_names(self, table_name) -> list:
-        result = self.execute_query(
-            f"SELECT COLUMN_NAME FROM information_schema.COLUMNS WHERE table_name='{table_name}'")
-        result = [column[0] for column in result]
-        return result  # e.g.: ['game_id', 'active_bots', 'created_at']
-
     def close(self):
         self.db.close()
 
