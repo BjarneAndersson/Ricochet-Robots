@@ -20,11 +20,7 @@ class Network:
         send_data = data
         try:
             self.client.send(str.encode(send_data))
-            t_recv_s = timeit.default_timer()
             recv_data = self.client.recv(4096 * 8)
-            t_recv_e = timeit.default_timer()
-            print(f"Time | recv: {t_recv_e - t_recv_s}")
-            print(f"Data: {recv_data}")
 
             try:
                 return pickle.loads(recv_data)
