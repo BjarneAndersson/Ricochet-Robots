@@ -485,15 +485,7 @@ def clear_unnecessary_data_in_db() -> None:  # delete rows in chips, robots, rou
 
 def finish_game():
     global game
-    db.execute_query(f"UPDATE games SET player_count={overall_player_count} WHERE game_id={game.game_id}")
-
-    game_started_at: datetime = db.execute_query(f"SELECT created_at FROM games WHERE game_id={game.game_id}")[0][0]
-    duration = datetime.now() - game_started_at
-    duration = duration.seconds
-    db.execute_query(f"UPDATE games SET duration={duration} WHERE game_id={game.game_id}")
-
-    winner_player_id = game.get_best_player_id_in_game()
-    db.execute_query(f"UPDATE games SET winner={winner_player_id} WHERE game_id={game.game_id}")
+    game.finish_game(overall_player_count)
 
     game = None
     create_new_game()
