@@ -417,7 +417,9 @@ def process_requests(data: str) -> bytes:
                         if len(path) == 3:  # 'POST user/<n>/solution?value=<x>'
                             if phase in [Phases.ROUND_STARTED, Phases.ROUND_COLLECT_SOLUTIONS]:
                                 solution = queries['value']
-                                db.execute_query(f"UPDATE players SET solution={solution} WHERE player_id={player_id}")
+                                datetime_now = str(datetime.now()).split(".")[0]
+                                db.execute_query(
+                                    f"UPDATE players SET solution={solution}, last_solution_change='{datetime_now}' WHERE player_id={player_id}")
                                 return str(200).encode()
                             else:
                                 return str(400).encode()
