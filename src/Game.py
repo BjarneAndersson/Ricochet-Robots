@@ -259,7 +259,7 @@ class Game:
 
         if self.active_player_id:  # if solution was found
             self.db.execute_query(
-                f"UPDATE chips SET revealed=False AND obtained_by={self.active_player_id} WHERE chip_id={active_chip_id}")
+                f"UPDATE chips SET revealed=False, obtained_by={self.active_player_id} WHERE chip_id={active_chip_id}")
 
             # update db - player score
             player_old_score = int(
@@ -273,7 +273,7 @@ class Game:
 
             # update db for round
             self.db.execute_query(
-                f"UPDATE rounds SET solution={self.active_player_solution} AND winner={self.active_player_id} WHERE round_id={self.round_id}")
+                f"UPDATE rounds SET solution={self.active_player_solution}, winner={self.active_player_id} WHERE round_id={self.round_id}")
         else:
             self.db.execute_query(
                 f"UPDATE chips SET revealed=False WHERE chip_id={active_chip_id}")
