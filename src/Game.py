@@ -261,7 +261,7 @@ class Game:
             self.db.execute_query(
                 f"UPDATE chips SET revealed=False, obtained_by={self.active_player_id} WHERE chip_id={active_chip_id}")
 
-            # update db - player score
+            # player score
             player_old_score = int(
                 self.db.execute_query(f"SELECT score FROM players WHERE player_id={self.active_player_id}")[0][0])
             self.db.execute_query(
@@ -302,9 +302,6 @@ class Game:
         self.set_global_ready_button_state(False)
         self.control_move_count = 0
 
-        if not self.choose_rand_chip():
-            self.finish_game()
-
     def get_best_player_id_in_game(self) -> int:
         all_player_ids_and_scores_in_game: list = self.db.execute_query(
             f"SELECT player_id, score FROM players WHERE game_id={self.game_id}")  # get all player in game
@@ -316,5 +313,20 @@ class Game:
         best_player_id = all_player_ids_and_scores_in_game[0][0]
         return best_player_id
 
-    def finish_game(self):
-        pass
+    def finish_game(self, overall_player_count):
+        # duration
+        game_started_at: datetime = \
+            self.db.execute_query(f"SELECT created_at FROM games WHERE game_id={self.game_id}")[0][0]
+        duration = datetime.now() - game_started_at
+        duration = duration.seconds
+        self.db.execute_query(f"UPDATE games SET duration={duration} WHERE game_id={self.game_id}")
+
+        # winners
+        winner_score: int = self.db.execute_query(f"SELECT MAX(score) FROM players WHERE game_id={self.game_id};")[0][0]
+        result_winners = self.db.execute_query(
+            f"SELECT player_id FROM players WHERE score={winner_score} AND game_id={self.game_id};")
+        winners = str([player_id_tpl[0] for player_id_tpl in result_winners]).replace("[", "").replace("]", "").replace(
+            " ", "")
+
+        self.db.execute_query(
+            f"UPDATE games SET duration={duration}, player_count={overall_player_count}, winners='{winners}' WHERE game_id={self.game_id};")
