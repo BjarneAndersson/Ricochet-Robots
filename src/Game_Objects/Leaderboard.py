@@ -121,19 +121,7 @@ class Leaderboard:
             return None
         return [int(player_id_tpl[0]) for player_id_tpl in raw_query_player_ids]
 
-    def calc_score_for_players(self):
-        player_ids = self.get_all_player_ids_in_game()
-        if not player_ids:
-            return
-
-        for player_id in player_ids:
-            score = self.db.execute_query(
-                f"SELECT COUNT(obtained_by) FROM chips WHERE obtained_by={player_id};")[0][0]
-            self.db.execute_query(f"UPDATE players SET score={score} WHERE player_id={player_id}")
-
     def get_all_players_who_have_scored(self):
-        self.calc_score_for_players()
-
         unfiltered_player_ids = self.get_all_player_ids_in_game()
         if not unfiltered_player_ids:
             return
