@@ -359,6 +359,7 @@ def process_requests(data: str) -> bytes:
                 if path[1] == 'robots':
                     if path[2] == 'select':  # "POST game/robots/select?position='(x,y)'"
                         if len(path) == 3:
+                            pre_selected_robot_id: int = game.selected_robot.robot_id if game.selected_robot else None
                             game.unselect_robot()
                             position = Converters.screen_position_to_position(queries['position'])
                             grid_position = game.board.get_node(position).get_position().copy()
@@ -368,7 +369,10 @@ def process_requests(data: str) -> bytes:
                             try:
                                 robot = [robot for robot in game.robots if
                                          robot.get_position() == grid_position][0]
-                                game.select_robot(robot)
+                                if robot.robot_id == pre_selected_robot_id:
+                                    pass
+                                else:
+                                    game.select_robot(robot)
                             except IndexError:
                                 game.unselect_robot()
                             return str(200).encode()
