@@ -407,7 +407,7 @@ def process_requests(data: str) -> bytes:
                 if path[1] == 'new':  # 'POST user/new?name=x'
                     if len(path) == 2:
                         player_id = db.execute_query(
-                            f"INSERT INTO players (game_id, name) VALUES ({game.game_id},'{queries['name']}') RETURNING player_id;")[
+                            f"INSERT INTO players (game_id, name, ready_for_round) VALUES ({game.game_id},'{queries['name']}', {bool(game.is_round_active)}) RETURNING player_id;")[
                             0][0]
                         return str(player_id).encode()
                 else:
