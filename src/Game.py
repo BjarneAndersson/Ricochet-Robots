@@ -227,7 +227,7 @@ class Game:
                 f"SELECT color_name, position FROM robots WHERE robot_id={self.selected_robot.robot_id}")[0]
             robot_position = Converters.db_position_to_position(robot_position_str)
 
-            if chip_position == robot_position and chip_color_name == robot_color_name:
+            if chip_position == robot_position and (chip_color_name == robot_color_name or chip_color_name == 'all'):
                 return True
         return False
 

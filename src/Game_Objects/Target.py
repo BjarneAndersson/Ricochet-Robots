@@ -44,14 +44,29 @@ class TargetDraw:
             pygame.draw.polygon(window, self.color, pts)
 
         elif self.symbol == 'spiral':  # temporarily drawing a X
-            pygame.draw.line(window, self.color,
-                             (position['x'], position['y']),
-                             (position['x'] + size['width'], position['y'] + size['height']),
-                             width=3)
-            pygame.draw.line(window, self.color,
-                             (position['x'] + size['width'], position['y']),
-                             (position['x'], position['y'] + size['height']),
-                             width=3)
+            # pygame.draw.line(window, self.color,
+            #                  (position['x'], position['y']),
+            #                  (position['x'] + size['width'], position['y'] + size['height']),
+            #                  width=3)
+            # pygame.draw.line(window, self.color,
+            #                  (position['x'] + size['width'], position['y']),
+            #                  (position['x'], position['y'] + size['height']),
+            #                  width=3)
+            star_points: tuple = ((position['x'] + size['width'] // 2, position['y'] + size['height'] // 10),  # top
+                                  (position['x'] + size['width'] // 2 + size['width'] // 10,
+                                   position['y'] + size['height'] // 2 - size['height'] // 10),  #
+                                  (position['x'] + size['width'] - size['width'] // 10,
+                                   position['y'] + size['height'] // 2),  # right
+                                  (position['x'] + size['width'] // 2 + size['width'] // 10,
+                                   position['y'] + size['height'] // 2 + size['height'] // 10),  #
+                                  (position['x'] + size['width'] // 2,
+                                   position['y'] + size['height'] - size['height'] // 10),  # bottom
+                                  (position['x'] + size['width'] // 2 - size['width'] // 10,
+                                   position['y'] + size['height'] // 2 + size['height'] // 10),  #
+                                  (position['x'] + size['width'] // 10, position['y'] + size['height'] // 2),  # left
+                                  (position['x'] + size['width'] // 2 - size['width'] // 10,
+                                   position['y'] + size['height'] // 2 - size['height'] // 10))
+            pygame.draw.polygon(window, self.color, star_points)
 
     def draw(self, window) -> None:
         self.r_draw(window, self.position, self.size)
