@@ -234,7 +234,6 @@ class Game:
     def get_best_player_round(self) -> int:
         result = self.db.execute_query(
             f"SELECT player_id FROM players WHERE game_id={self.game_id} AND solution IS NOT NULL ORDER BY solution ASC, last_solution_change ASC LIMIT 1")
-        print(result)
         return result[0][0] if result else None
 
     def pass_active_status_on_to_next_player_in_solution_list(self):

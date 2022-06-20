@@ -365,7 +365,6 @@ def process_requests(data: str) -> bytes:
                             grid_position = game.board.get_node(position).get_position().copy()
                             grid_position.pop("x")
                             grid_position.pop("y")
-                            print(grid_position)
                             try:
                                 robot = [robot for robot in game.robots if
                                          robot.get_position() == grid_position][0]
