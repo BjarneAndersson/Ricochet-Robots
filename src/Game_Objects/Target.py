@@ -43,15 +43,7 @@ class TargetDraw:
                 pts.append([int(x), int(y)])
             pygame.draw.polygon(window, self.color, pts)
 
-        elif self.symbol == 'spiral':  # temporarily drawing a X
-            # pygame.draw.line(window, self.color,
-            #                  (position['x'], position['y']),
-            #                  (position['x'] + size['width'], position['y'] + size['height']),
-            #                  width=3)
-            # pygame.draw.line(window, self.color,
-            #                  (position['x'] + size['width'], position['y']),
-            #                  (position['x'], position['y'] + size['height']),
-            #                  width=3)
+        elif self.symbol == 'spiral':
             star_points: tuple = ((position['x'] + size['width'] // 2, position['y'] + size['height'] // 10),  # top
                                   (position['x'] + size['width'] // 2 + size['width'] // 10,
                                    position['y'] + size['height'] // 2 - size['height'] // 10),  #
