@@ -26,7 +26,7 @@ CREATE TABLE `games` (
   `duration` int(11) NOT NULL DEFAULT 0,
   `round_number` int(11) NOT NULL DEFAULT 1,
   `player_count` int(11) NOT NULL DEFAULT 0,
-  `winner` int(11) DEFAULT NULL
+  `winners` varchar(255) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE `players` (
