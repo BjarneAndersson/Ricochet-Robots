@@ -109,7 +109,7 @@ def convert_pygame_key_to_direction_str(key) -> str:
 
 
 def main():
-    global window, network, server, colors, player_id, menu, individual_solution, ready_button, font
+    global window, network, colors, player_id, menu, individual_solution, ready_button, font
 
     server: dict = {'ip': input("IP-address of the server: "),
                     'port': int(input("Port of the server: "))}
