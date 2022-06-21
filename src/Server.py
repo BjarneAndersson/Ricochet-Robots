@@ -52,7 +52,7 @@ def main():
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
     # get ip-address of local sys
-    ip_address = netifaces.ifaddresses(netifaces.interfaces()[1])[netifaces.AF_INET][0]['addr']
+    ip_address = netifaces.ifaddresses(netifaces.interfaces()[0])[netifaces.AF_INET][0]['addr']
     # ip_address = socket.gethostbyname(socket.gethostname())
 
     try:
