@@ -52,8 +52,9 @@ def main():
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
     # get ip-address of local sys
-    ip_address = netifaces.ifaddresses(netifaces.interfaces()[0])[netifaces.AF_INET][0]['addr']
+    # ip_address = netifaces.ifaddresses(netifaces.interfaces()[0])[netifaces.AF_INET][0]['addr']
     # ip_address = socket.gethostbyname(socket.gethostname())
+    ip_address = input("IP-address\n>> ")
 
     try:
         s.bind((ip_address, 0))  # connect to local ip with port 0 -> socket will search for a free port
@@ -508,9 +509,4 @@ import cProfile
 import pstats
 
 if __name__ == '__main__':
-    profile = cProfile.Profile()
-    profile.runcall(main)
-    ps = pstats.Stats(profile)
-    ps.sort_stats('tottime')
-    ps.print_stats(20)
-    # main()
+    main()
