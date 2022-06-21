@@ -61,3 +61,4 @@ Project Link: [https://github.com/BjarneAndersson/Ricochet-Robots](https://githu
 ## Acknowledgements
 
 * [Best-README-Template](https://github.com/othneildrew/Best-README-Template)
+* [Samuel Garbers](https://github.com/wamangorfer)
