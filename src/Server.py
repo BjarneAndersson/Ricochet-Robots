@@ -6,11 +6,8 @@ os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = "hide"  # hide pycharm import msg
 
 import pickle
 import socket
-import netifaces
 import selectors
 import types
-
-import pyperclip
 
 from datetime import datetime
 from enum import Enum, auto
@@ -52,8 +49,6 @@ def main():
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
     # get ip-address of local sys
-    # ip_address = netifaces.ifaddresses(netifaces.interfaces()[0])[netifaces.AF_INET][0]['addr']
-    # ip_address = socket.gethostbyname(socket.gethostname())
     ip_address = input("IP-address\n>> ")
 
     try:
@@ -73,7 +68,6 @@ def main():
     # clear_unnecessary_data_in_db()
 
     print(f'Server Started\nIP: {ip_address} | Port: {port}\n')
-    pyperclip.copy(port)
 
     print("\nWaiting for connections\n")
 
