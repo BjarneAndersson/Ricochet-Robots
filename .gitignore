@@ -2,3 +2,4 @@
 src/temp_storage.py
 /src/small_tests.py
 /docker/
+venv
