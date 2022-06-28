@@ -1,7 +1,4 @@
-import cProfile
 import os
-import pstats
-import timeit
 
 os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = "hide"
 
