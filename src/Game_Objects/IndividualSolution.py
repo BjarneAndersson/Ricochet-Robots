@@ -17,6 +17,7 @@ class InputField:
         self.active = False
         self.color = Colors.input_field['inactive']
         self.text = text
+        self.player_solution = None
 
     def set_active_state(self, _state):
         self.active = _state
@@ -25,11 +26,19 @@ class InputField:
     def change_state(self):
         self.set_active_state(not self.active)
 
+    def get_player_solution(self) -> str:
+        return str(self.player_solution)
+
+    def clear(self):
+        self.text = ''
+        self.player_solution = None
+
     def handle_event(self, event):
         if event.key == pygame.K_RETURN:
-            solution = self.text if self.text != '' else -1
+            solution = self.text if self.text != '' else None
             self.network.send(f'POST user/{self.player_id}/solution?value={solution}')
             self.text = ''
+            self.player_solution = solution
             self.active = False
             self.color = Colors.input_field['inactive']
         elif event.key == pygame.K_BACKSPACE:
@@ -52,15 +61,26 @@ class InputField:
 
 class IndividualSolution:
 
-    def __init__(self, position: dict, size: dict, font, network, player_id):
+    def __init__(self, position: dict, size: dict, font, network, player_id, player_name):
         self.position = position
         self.size = size
         self.font = font
         self.network = network
         self.player_id = player_id
+        self.player_name = player_name
+        self.player_solution = "None"
         self.input_field = InputField(self.position,
                                       {'width': self.size['width'], 'height': 2 * (self.size['height'] // 3)},
                                       self.font, network, player_id)
+
+    def set_player_name(self, name) -> None:
+        self.player_name = name
+
+    def set_solution(self, solution) -> None:
+        self.player_solution = solution
+
+    def clear(self):
+        self.input_field.clear()
 
     def draw(self, window) -> None:
         pygame.draw.rect(window, Colors.individual_solution['fill'],
@@ -81,24 +101,22 @@ class IndividualSolution:
         self.input_field.draw(window)
 
         # player solution
-        player_solution_raw = self.network.send(f"GET user/{self.player_id}/solution")
-        player_solution = None if player_solution_raw == 'None' else int(player_solution_raw)
-        if not player_solution or self.input_field.active:  # show nothing
+        self.player_solution = self.input_field.get_player_solution()
+        if self.player_solution == 'None' or self.input_field.active:  # show nothing
             pass
             # pygame.draw.rect(window, Colors.individual_solution['fill'],
             #                  (self.position['x'] + 2,
             #                   self.position['y'] + 2,
             #                   self.size['width'] - 4, self.size['height'] - (self.size['width'] // 3)))
         else:  # render player solution
-            text_rect = self.font.get_rect(str(player_solution), size=64)
+            text_rect = self.font.get_rect(str(self.player_solution), size=64)
             text_rect.center = (self.position['x'] + (self.size['width'] // 2),
                                 self.position['y'] + 0.5 * 2 * (self.size['height'] // 3))
-            self.font.render_to(window, text_rect, str(player_solution), (0, 0, 0), size=64)
+            self.font.render_to(window, text_rect, str(self.player_solution), (0, 0, 0), size=64)
 
         # render player name
         font_size_name = 26
-        player_name = self.network.send(f"GET user/{self.player_id}/name")
-        text_rect_name = self.font.get_rect(player_name, size=font_size_name)
+        text_rect_name = self.font.get_rect(self.player_name, size=font_size_name)
         text_rect_name.center = (self.position['x'] + (self.size['width'] // 2),
                                  self.position['y'] + 2 * (self.size['height'] // 3) + (self.size['height'] // 6))
-        self.font.render_to(window, text_rect_name, player_name, (0, 0, 0), size=font_size_name)
+        self.font.render_to(window, text_rect_name, self.player_name, (0, 0, 0), size=font_size_name)
