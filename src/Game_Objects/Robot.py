@@ -49,6 +49,8 @@ class Robot:
         position = Converters.db_position_to_position(
             self.db.execute_query(f"SELECT position FROM robots WHERE robot_id={self.robot_id}")[
                 0][0])
+        position['x'] = self.current_node.get_position()['x']
+        position['y'] = self.current_node.get_position()['y']
         return position
 
     def set_position(self, _position: dict, grid, is_home=False) -> None:
@@ -79,6 +81,9 @@ class RobotDraw:
         self.position: dict = position
         self.size: dict = size
         self.active: bool = active
+
+    def set_position(self, position: dict) -> None:
+        self.position = position
 
     def draw(self, window) -> None:
         pygame.draw.circle(window, self.color,
