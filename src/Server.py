@@ -379,9 +379,7 @@ def process_requests(data: str) -> bytes:
                             pre_selected_robot_id: int = game.selected_robot.robot_id if game.selected_robot else None
                             game.unselect_robot()
                             position = Converters.screen_position_to_position(queries['position'])
-                            grid_position = game.board.get_node(position).get_position().copy()
-                            grid_position.pop("x")
-                            grid_position.pop("y")
+                            grid_position = game.board.get_node(position).get_position()
                             try:
                                 robot = [robot for robot in game.robots if
                                          robot.get_position() == grid_position][0]
