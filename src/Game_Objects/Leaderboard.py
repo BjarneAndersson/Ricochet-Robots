@@ -161,5 +161,6 @@ class Leaderboard:
                 entries.append(LeaderboardEntryDraw(name, score, target_draw_objects))
         return entries
 
-        obj_leaderboard_draw = LeaderboardDraw(self.position, self.size, self.field_size, entries)
+    def create_obj_for_draw(self):
+        obj_leaderboard_draw = LeaderboardDraw(self.position, self.size, self.field_size, self.create_entries())
         return obj_leaderboard_draw
