@@ -22,16 +22,21 @@ class InputField:
         self.active = False
         self.color = Colors.input_field['inactive']
         self.text = text
+        self.player_name = self.network.send(f'GET user/{self.player_id}/name')
 
     def set_active_state(self, _state):
         self.active = _state
         self.color = Colors.input_field['active'] if self.active else Colors.input_field['inactive']
         self.text = ''
 
+    def get_player_name(self) -> str:
+        return self.player_name
+
     def handle_event(self, event):
         if event.key == pygame.K_RETURN:
             name = self.text if self.text != '' else self.network.send(f'GET user/{self.player_id}/name')
             self.network.send(f'POST user/{self.player_id}/name?value={name}')
+            self.player_name = name
             self.text = ''
             self.active = False
             self.color = Colors.input_field['inactive']
