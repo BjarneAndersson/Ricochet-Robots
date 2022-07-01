@@ -78,6 +78,9 @@ class LeaderboardDraw:
         self.field_size = field_size
         self.entries: list = entries
 
+    def set_entries(self, entries: list[LeaderboardEntryDraw]) -> None:
+        self.entries = entries
+
     def draw(self, window, font):
         offset: dict = {
             'top': 0,
