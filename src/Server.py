@@ -289,6 +289,9 @@ def process_requests(data: str) -> bytes:
                     elif path[1] == 'hourglass':
                         if len(path) == 2:  # 'GET game/hourglass'
                             return pickle.dumps(game.hourglass_draw)
+                        elif path[2] == 'percentage_of_fill':
+                            if len(path) == 3:
+                                return str(game.hourglass.get_percentage_of_fill()).encode()
                         elif path[2] == 'time_over':  # GET game/hourglass/time_over
                             if len(path) == 3:
                                 return pickle.dumps(game.hourglass.get_is_time_over())
