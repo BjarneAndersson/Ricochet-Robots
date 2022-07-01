@@ -18,6 +18,9 @@ class TargetDraw:
         self.size = size
         self.is_revealed = is_revealed
 
+    def set_revealed(self, state: bool) -> None:
+        self.is_revealed = state
+
     def r_draw(self, window, position, size):
         if self.symbol == 'circle':
             pygame.draw.circle(window, self.color,
