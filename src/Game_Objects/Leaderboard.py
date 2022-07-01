@@ -143,7 +143,7 @@ class Leaderboard:
                       self.db.execute_query(f"SELECT chip_id FROM chips WHERE obtained_by={player_id}")]
         return target_ids
 
-    def create_obj_for_draw(self):
+    def create_entries(self) -> list[LeaderboardEntryDraw]:
         entries: list = []
         scored_player_ids: list = self.get_all_players_who_have_scored()
 
@@ -159,6 +159,7 @@ class Leaderboard:
                         target_draw_objects.append(target.create_obj_for_draw())
 
                 entries.append(LeaderboardEntryDraw(name, score, target_draw_objects))
+        return entries
 
         obj_leaderboard_draw = LeaderboardDraw(self.position, self.size, self.field_size, entries)
         return obj_leaderboard_draw
