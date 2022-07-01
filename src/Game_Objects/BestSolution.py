@@ -54,24 +54,16 @@ class BestSolution:
         self.position = position
         self.size = size
 
-    def create_obj_for_draw(self) -> BestSolutionDraw:
-        all_player_ids_and_solutions_in_game: list = self.db.execute_query(
-            f"SELECT player_id, solution FROM players WHERE game_id={self.game_id}")  # get all player in game
-        if all_player_ids_and_solutions_in_game:
-            all_player_ids_and_solutions_in_game = list(
-                filter(lambda x: x[1] != None,
-                       all_player_ids_and_solutions_in_game))  # filter out player without a solution
-            all_player_ids_and_solutions_in_game.sort(key=lambda x: x[1])  # sort after solution
-            if len(all_player_ids_and_solutions_in_game) != 0:
-                best_player_id = all_player_ids_and_solutions_in_game[0][0]
-                name, solution = \
-                self.db.execute_query(f"SELECT name, solution FROM players WHERE player_id={best_player_id}")[0]
-            else:
-                solution = ''
-                name = ''
-        else:
-            solution = ''
-            name = ''
+    def get_solution(self) -> int:
+        result = self.db.execute_query(
+            f"SELECT solution FROM players WHERE game_id={self.game_id} AND solution IS NOT NULL ORDER BY solution ASC, last_solution_change ASC LIMIT 1")
+        return result[0][0] if result else ''
 
-        obj_best_solution_draw = BestSolutionDraw(self.position, self.size, solution, name)
+    def get_player_name(self) -> str:
+        result = self.db.execute_query(
+            f"SELECT name FROM players WHERE game_id={self.game_id} AND solution IS NOT NULL ORDER BY solution ASC, last_solution_change ASC LIMIT 1")
+        return result[0][0] if result else ''
+
+    def create_obj_for_draw(self) -> BestSolutionDraw:
+        obj_best_solution_draw = BestSolutionDraw(self.position, self.size, self.get_solution(), self.get_player_name())
         return obj_best_solution_draw
