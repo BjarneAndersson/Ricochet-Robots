@@ -51,6 +51,14 @@ def convert_pygame_key_to_direction_str(key) -> str:
         return "right"
 
 
+def set_player_name(name: str):
+    screen.individual_solution.set_player_name(name)
+
+
+def set_player_solution(solution: int):
+    screen.individual_solution.set_solution(solution)
+
+
 def main():
     global window, network, colors, player_id, screen
 
