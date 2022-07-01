@@ -15,6 +15,12 @@ class BestSolutionDraw:
         self.solution = solution
         self.player_name = player_name
 
+    def set_solution(self, solution: int) -> None:
+        self.solution = solution
+
+    def set_player_name(self, player_name: int) -> None:
+        self.player_name = player_name
+
     def draw(self, window, font) -> None:
         pygame.draw.rect(window, Colors.individual_solution['fill'],
                          (self.position['x'],
