@@ -258,17 +258,22 @@ def process_requests(data: str) -> bytes:
 
                     elif path[1] == 'targets':
                         if len(path) == 2:  # 'GET game/targets'
-                            if phase in [Phases.ROUND_STARTED, Phases.ROUND_COLLECT_SOLUTIONS,
-                                         Phases.ROUND_EVALUATE_ACTIVE_PLAYER,
-                                         Phases.ROUND_ACTIVE_PLAYER_SHOWS_SOLUTION]:
-
-                                active_target_id = int(
-                                    db.execute_query(f"SELECT chip_id FROM rounds WHERE round_id={game.round_id}")[0][
-                                        0])
-                                for target in game.board.targets:
-                                    if target.chip_id == active_target_id:
-                                        return pickle.dumps(target.create_obj_for_draw())
                             return pickle.dumps(game.targets_draw)
+                        elif path[2] == 'active':
+                            if len(path) == 3:  # 'GET game/targets/active'
+                                if phase in [Phases.ROUND_STARTED, Phases.ROUND_COLLECT_SOLUTIONS,
+                                             Phases.ROUND_EVALUATE_ACTIVE_PLAYER,
+                                             Phases.ROUND_ACTIVE_PLAYER_SHOWS_SOLUTION]:
+
+                                    active_target_id = int(
+                                        db.execute_query(f"SELECT chip_id FROM rounds WHERE round_id={game.round_id}")[
+                                            0][
+                                            0])
+                                    for target in game.board.targets:
+                                        if target.chip_id == active_target_id:
+                                            return pickle.dumps({'symbol': target.symbol, 'color': target.color_name})
+                                else:
+                                    return pickle.dumps(None)
 
                     elif path[1] == 'menu':
                         if path[2] == 'position':  # 'GET game/menu/position'
