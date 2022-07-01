@@ -409,7 +409,7 @@ def process_requests(data: str) -> bytes:
                                 if robot.robot_id == next_robot_id:
                                     game.select_robot(robot)
                             return str(200).encode()
-                    elif path[2] == 'move':  # 'GET game/robots/move'
+                    elif path[2] == 'move':  # 'POST game/robots/move'
                         if len(path) == 3:
                             if phase == Phases.ROUND_ACTIVE_PLAYER_SHOWS_SOLUTION:
                                 is_moved = game.selected_robot.move(queries['direction'])
