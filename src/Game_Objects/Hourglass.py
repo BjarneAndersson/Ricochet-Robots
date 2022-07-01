@@ -14,6 +14,9 @@ class HourglassDraw:
         self.size = size
         self.percentage_of_fill = percentage_of_fill
 
+    def set_percentage_of_fill(self, percentage_of_fill: float) -> None:
+        self.percentage_of_fill = percentage_of_fill
+
     def draw(self, window) -> None:
         # background
         pygame.draw.rect(window, Colors.hourglass['background'],
@@ -72,6 +75,9 @@ class Hourglass:
 
     def get_is_time_over(self):
         return self.time_passed == self.max_time
+
+    def get_percentage_of_fill(self) -> float:
+        return self.time_passed / self.max_time
 
     def create_obj_for_draw(self):
         percentage_of_fill = self.time_passed / self.max_time
