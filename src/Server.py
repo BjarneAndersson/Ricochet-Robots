@@ -242,6 +242,13 @@ def process_requests(data: str) -> bytes:
                     elif path[1] == 'robots':
                         if len(path) == 2:  # 'GET game/robots'
                             return pickle.dumps(game.robots_draw)
+                        elif path[2] == 'positions':
+                            if len(path) == 3:  # 'GET game/robots/positions'
+                                return pickle.dumps({robot.color_name: robot.get_position() for robot in game.robots})
+                        elif path[2] == 'active':
+                            if len(path) == 3:  # 'GET game/robots/active'
+                                return_value = game.selected_robot.color_name if game.selected_robot else None
+                                return pickle.dumps(return_value)
                         elif path[2] == 'select':  # 'GET game/robots/select'
                             if len(path) == 3:
                                 if game.selected_robot:
