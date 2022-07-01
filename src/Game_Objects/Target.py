@@ -7,9 +7,11 @@ import pygame
 
 
 class TargetDraw:
-    def __init__(self, color: tuple, symbol: str, position: dict, position_grid_center: dict, size: dict,
+    def __init__(self, color: tuple, color_name: str, symbol: str, position: dict, position_grid_center: dict,
+                 size: dict,
                  is_revealed: bool):
         self.color = color
+        self.color_name = color_name
         self.symbol = symbol
         self.position = position
         self.position_grid_center = position_grid_center
@@ -89,6 +91,7 @@ class Target:
     def create_obj_for_draw(self):
         is_revealed = bool(self.db.execute_query(f"SELECT revealed FROM chips WHERE chip_id={self.chip_id}")[0][0])
 
-        obj_target_draw = TargetDraw(self.color, self.symbol, self.position, self.position_grid_center, self.size,
+        obj_target_draw = TargetDraw(self.color, self.color_name, self.symbol, self.position, self.position_grid_center,
+                                     self.size,
                                      is_revealed)
         return obj_target_draw
