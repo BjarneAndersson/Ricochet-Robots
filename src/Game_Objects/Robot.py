@@ -15,6 +15,7 @@ class Robot:
         self.game_id = game_id
         self.robot_id = robot_id
         self.field_size = field_size
+        self.color_name = db.execute_query(f"SELECT color_name FROM robots WHERE robot_id={robot_id}")[0][0]
         self.current_node = current_node
         self.current_node.is_robot = True
         self.in_use: bool = False
@@ -66,13 +67,15 @@ class Robot:
         color = Colors.robot[self.db.execute_query(
             f"SELECT color_name FROM robots WHERE game_id={self.game_id} AND robot_id={self.robot_id}")[0][0]]
         position = self.current_node.get_position()
-        obj_robot_draw = RobotDraw(color, position, {'width': self.field_size, 'height': self.field_size}, self.in_use)
+        obj_robot_draw = RobotDraw(color, self.color_name, position,
+                                   {'width': self.field_size, 'height': self.field_size}, self.in_use)
         return obj_robot_draw
 
 
 class RobotDraw:
-    def __init__(self, color, position, size, active):
+    def __init__(self, color, color_name, position, size, active):
         self.color: tuple = color
+        self.color_name: str = color_name
         self.position: dict = position
         self.size: dict = size
         self.active: bool = active
