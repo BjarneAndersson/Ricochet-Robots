@@ -433,7 +433,8 @@ def process_requests(data: str) -> bytes:
                                 solution = queries['value']
                                 datetime_now = str(datetime.now()).split(".")[0]
                                 db.execute_query(
-                                    f"UPDATE players SET solution={solution}, last_solution_change='{datetime_now}' WHERE player_id={player_id}")
+                                    f"UPDATE players SET solution={solution}, last_solution_change='{datetime_now}' WHERE player_id={player_id}".replace(
+                                        "None", "Null"))
                                 return str(200).encode()
                             else:
                                 return str(400).encode()
