@@ -306,6 +306,10 @@ def process_requests(data: str) -> bytes:
                     elif path[1] == 'best_solution':
                         if len(path) == 2:  # 'GET game/best_solution'
                             return pickle.dumps(game.best_solution_draw)
+                        elif path[2] == 'update':
+                            if len(path) == 3:
+                                return pickle.dumps({'solution': game.best_solution.get_solution(),
+                                                     'player_name': game.best_solution.get_player_name()})
 
                     elif path[1] == 'individual_solution':
                         if path[2] == 'position':  # 'GET game/individual_solution/position'
