@@ -299,7 +299,7 @@ def process_requests(data: str) -> bytes:
                     elif path[1] == 'leaderboard':
                         if len(path) == 2:  # 'GET game/leaderboard'
                             return pickle.dumps(game.leaderboard_draw)
-                        elif path[2] == 'entries':
+                        elif path[2] == 'entries':  # 'GET game/leaderboard/entries'
                             if len(path) == 3:
                                 return pickle.dumps(game.leaderboard.create_entries())
 
