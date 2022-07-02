@@ -72,14 +72,31 @@ class LeaderboardEntryDraw:
 
 
 class LeaderboardDraw:
-    def __init__(self, position: dict, size: dict, field_size, entries: list):
+    def __init__(self, position: dict, size: dict, field_size, targets: list):
         self.position: dict = position
         self.size: dict = size
         self.field_size = field_size
-        self.entries: list = entries
+        self.targets: list = targets
 
-    def set_entries(self, entries: list[LeaderboardEntryDraw]) -> None:
-        self.entries = entries
+    def set_entries(self, entries: list[dict]) -> None:
+        print(entries)
+        self.entries = self.convert_entries_dict_to_list(entries)
+
+    def convert_entries_dict_to_list(self, _entries: list[dict]) -> list[LeaderboardEntryDraw]:
+        # [{'name': 'PC', 'score': 1, 'targets': [{'color': 'red', 'symbol': 'square'}]}]
+        entries: list[LeaderboardEntryDraw] = []
+
+        for _entry in _entries:
+            obtained_targets_draw: list = []
+
+            for target_specification in _entry['targets']:
+                for target in self.targets:
+                    if target_specification['color'] == target.color_name and target_specification[
+                        'symbol'] == target.symbol:
+                        obtained_targets_draw.append(target)
+
+            entries.append(LeaderboardEntryDraw(_entry['name'], _entry['score'], obtained_targets_draw))
+        return entries
 
     def draw(self, window, font):
         offset: dict = {
@@ -144,23 +161,27 @@ class Leaderboard:
         return target_ids
 
     def create_entries(self) -> list[LeaderboardEntryDraw]:
+        # [{'name': 'PC', 'score': 1, 'targets': [{'color': 'red', 'symbol': 'square'}]}]
         entries: list = []
         scored_player_ids: list = self.get_all_players_who_have_scored()
 
         if scored_player_ids:
             for player_id in scored_player_ids:
+                c_entry: dict = {}
 
-                name, score = self.db.execute_query(f"SELECT name, score FROM players WHERE player_id={player_id}")[0]
+                c_entry['name'], c_entry['score'] = \
+                self.db.execute_query(f"SELECT name, score FROM players WHERE player_id={player_id}")[0]
 
                 target_ids_obtained_by_player = self.get_all_target_ids_which_the_player_has_obtained(player_id)
-                target_draw_objects: list = []
+                c_entry['targets']: list = []
                 for target in self.targets:
                     if target.chip_id in target_ids_obtained_by_player:
-                        target_draw_objects.append(target.create_obj_for_draw())
+                        c_entry['targets'].append({'color': target.color_name, 'symbol': target.symbol})
 
-                entries.append(LeaderboardEntryDraw(name, score, target_draw_objects))
+                entries.append(c_entry)
         return entries
 
     def create_obj_for_draw(self):
-        obj_leaderboard_draw = LeaderboardDraw(self.position, self.size, self.field_size, self.create_entries())
+        obj_leaderboard_draw = LeaderboardDraw(self.position, self.size, self.field_size,
+                                               [target.create_obj_for_draw() for target in self.targets])
         return obj_leaderboard_draw
