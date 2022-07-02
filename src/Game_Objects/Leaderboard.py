@@ -79,7 +79,6 @@ class LeaderboardDraw:
         self.targets: list = targets
 
     def set_entries(self, entries: list[dict]) -> None:
-        print(entries)
         self.entries = self.convert_entries_dict_to_list(entries)
 
     def convert_entries_dict_to_list(self, _entries: list[dict]) -> list[LeaderboardEntryDraw]:
