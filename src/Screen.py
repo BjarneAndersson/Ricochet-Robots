@@ -138,5 +138,3 @@ class Screen:
         self.leaderboard.draw(self.window, self.font)
 
         pygame.display.update()
-
-        print("\n---\n")
