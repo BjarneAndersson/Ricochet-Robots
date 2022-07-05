@@ -1,3 +1,5 @@
+import pickle
+
 import pygame
 
 from .Node import Node
@@ -263,6 +265,9 @@ class Board:
 
         self.create_board()
         self.create_grid()
+
+        with open("grid.pkl", "wb") as outp:
+            pickle.dump(self.grid, outp, pickle.HIGHEST_PROTOCOL)
 
     def create_board(self) -> dict:
         self.board = {'yellow': QuarterBoardYellow(self.field_size),
