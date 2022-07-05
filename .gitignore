@@ -4,3 +4,4 @@ src/temp_storage.py
 /docker/
 venv
 __pycache__/
+*.pkl
