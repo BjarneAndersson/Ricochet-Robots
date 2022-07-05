@@ -77,13 +77,13 @@ def main():
     clock = pygame.time.Clock()
     run: bool = True
 
-    all_fps: list = []
+    avg_fps: float = screen.frame_rate
 
     try:
         while run:
             clock.tick(screen.frame_rate)
             c_fps = clock.get_fps()
-            all_fps.append(c_fps)
+            avg_fps = (avg_fps + c_fps) / 2
 
             screen.draw()
 
@@ -155,7 +155,7 @@ def main():
     finally:
         pygame.quit()
         print("Connection lost")
-        print(f"Avg. fps: {sum(all_fps) / len(all_fps)}")
+        print(f"Avg. fps: {avg_fps}")
 
 
 if __name__ == '__main__':
