@@ -28,7 +28,7 @@ class Board:
                 cell += '0'
                 cell += ''.join(
                     [str(int(direction)) for direction in grid[row][column].convert_neighbors_to_bool_based().values()])
-                c_row_cells.append(int(cell))
+                c_row_cells.append(int(cell, 2))
             self.board.append(c_row_cells)
 
         for robot_position in convert_robot_positions(init_board_state).values():
@@ -38,65 +38,57 @@ class Board:
 
         self.target = convert_target(init_board_state)
 
-        print(self.board)
         self.pre_compute_map(grid)
 
     def pre_compute_map(self, grid: list[list[Node]]) -> None:
         target_node = grid[self.target['position']['row']][self.target['position']['column']]
 
         all_nodes_evaluated_with_move_count: list[tuple[int, Node]] = [(0, target_node)]
-        temp_s: list[tuple[int, Node]] = [(0, target_node)]
+        nodes_to_be_evaluated: list[tuple[int, Node]] = [(0, target_node)]
         evaluated_nodes: list[Node] = [target_node]
 
-        temp_q: list[list] = [[' ' for _ in range(16)] for _ in range(16)]
+        evaluated_move_counts: list[list] = [[0 for _ in range(16)] for _ in range(16)]
 
-        # for t_move_count, c_node in temp_s:
-        while temp_s:
-            t_move_count, c_node = temp_s[0]
-            move_count = t_move_count + 1
-            if move_count > 5:
-                break
+        while nodes_to_be_evaluated:
+            move_count, c_node = nodes_to_be_evaluated[0]
+            next_move_count: int = move_count + 1
             for direction, node in c_node.neighbors.items():
                 if node:
                     while True:
                         if node not in evaluated_nodes:
-                            all_nodes_evaluated_with_move_count.append((move_count, node))
-                            temp_s.append((move_count, node))
+                            all_nodes_evaluated_with_move_count.append((next_move_count, node))
+                            nodes_to_be_evaluated.append((next_move_count, node))
                             evaluated_nodes.append(node)
                         else:
-                            for m, n in all_nodes_evaluated_with_move_count:
-                                if n == node:
-                                    if m > move_count:
-                                        all_nodes_evaluated_with_move_count.remove((m, node))
-                                        all_nodes_evaluated_with_move_count.append((move_count, node))
-                                        temp_s.remove((m, node))
-                                        temp_s.append((move_count, node))
-                                        evaluated_nodes.remove(node)
+                            for l_move_count, l_node in all_nodes_evaluated_with_move_count:
+                                if l_node == node and l_move_count > next_move_count:
+                                    all_nodes_evaluated_with_move_count.remove((l_move_count, node))
+                                    all_nodes_evaluated_with_move_count.append((next_move_count, node))
+
+                                    nodes_to_be_evaluated.remove((l_move_count, node))
+                                    nodes_to_be_evaluated.append((next_move_count, node))
+
+                                    evaluated_nodes.remove(node)
 
                         if node.neighbors[direction]:
-                            node = node.neighbors[direction]
+                            node: Node = node.neighbors[direction]
                         else:
                             break
 
-            for move_count, node in all_nodes_evaluated_with_move_count:
-                temp_q[node.position['row']][node.position['column']] = str(move_count)
-                print(move_count, format(move_count, 'b').zfill(3),
-                      format(self.board[c_node.position['row']][c_node.position['column']], 'b').zfill(8)[3:])
-                self.board[c_node.position['row']][c_node.position['column']] = \
-                    int(format(move_count, 'b').zfill(3) + format(
-                        self.board[c_node.position['row']][c_node.position['column']], 'b').zfill(8)[3:], 2)
+            for next_move_count, node in all_nodes_evaluated_with_move_count:
+                evaluated_move_counts[node.position['row']][node.position['column']]: int = next_move_count
 
-            # print(temp_q)
-            # print(self.board)
+            nodes_to_be_evaluated.remove((move_count, c_node))
+            nodes_to_be_evaluated.sort(key=lambda x: x[0])
 
-            temp_s.remove((t_move_count, c_node))
-            temp_s.sort(key=lambda x: x[0])
-
-        for row in self.board:
-            print([format(cell, 'b').zfill(8)[:3] for cell in row])
+        for i, row in enumerate(evaluated_move_counts):
+            for j, cell_move_count in enumerate(row):
+                self.board[i][j]: int = \
+                    int(format(cell_move_count, 'b').zfill(3) + format(
+                        self.board[i][j], 'b').zfill(8)[3:], 2)
 
         with open("pre_computed_grid.pkl", "wb") as outp:
-            pickle.dump(temp_q, outp, pickle.HIGHEST_PROTOCOL)
+            pickle.dump(evaluated_move_counts, outp, pickle.HIGHEST_PROTOCOL)
 
 
 def convert_target(board: BoardState) -> dict:
@@ -143,13 +135,15 @@ def convert_robot_positions(board: BoardState) -> dict[str, dict[str, int]]:
 
 if __name__ == '__main__':
     o = BoardState()
-    print(f"Size of object: {sys.getsizeof(o)}")
-    print(f"Size of attributes: {sys.getsizeof(o.target) + sys.getsizeof(o.robot_positions)}")
-
-    print(convert_robot_positions(o))
-    print(convert_target(o))
 
     with open('grid.pkl', 'rb') as inp:
         grid = pickle.load(inp)
 
     b = Board(o, grid)
+
+    print(f"Size of board_state attributes: {sys.getsizeof(o.target) + sys.getsizeof(o.robot_positions)}")
+
+    print(f"Size of board attributes: {sys.getsizeof(b.board)}")
+
+    print(convert_robot_positions(o))
+    print(convert_target(o))
