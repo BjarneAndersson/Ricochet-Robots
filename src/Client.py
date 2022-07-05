@@ -85,7 +85,7 @@ def main():
             c_fps = clock.get_fps()
             all_fps.append(c_fps)
 
-            draw()
+            screen.draw()
 
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
