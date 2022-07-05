@@ -97,7 +97,7 @@ class Node:
     def set_wall(self, direction: str) -> None:
         self.neighbors[direction] = None
 
-    def create_obj_for_draw(self) -> NodeDraw:
+    def convert_neighbors_to_bool_based(self) -> dict[str, bool]:
         # conv_neighbors_to_bool_based  |  {'up': <Node>, 'down': None} -> {'up': True, 'down': False}
         bool_based_neighbors = self.neighbors.copy()
         for k, v in self.neighbors.items():
@@ -106,5 +106,8 @@ class Node:
             else:
                 bool_based_neighbors[k] = True
 
-        obj_node_draw = NodeDraw(self.color, self.position, self.size, bool_based_neighbors)
+        return bool_based_neighbors
+
+    def create_obj_for_draw(self) -> NodeDraw:
+        obj_node_draw = NodeDraw(self.color, self.position, self.size, self.convert_neighbors_to_bool_based())
         return obj_node_draw
