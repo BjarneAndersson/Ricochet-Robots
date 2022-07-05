@@ -165,7 +165,7 @@ class QuarterBoardGreen(QuarterBoard):
         self.walls.append(
             Wall({'row': 9, 'column': 3}, {'row': 8, 'column': 3}, {'node1': 'top', 'node2': 'bottom'}))
         self.walls.append(
-            Wall({'row': 9, 'column': 3}, {'row': 9, 'column': 2}, {'node1': 'left', 'node2': 'right'}))
+            Wall({'row': 9, 'column': 3}, {'row': 9, 'column': 4}, {'node1': 'right', 'node2': 'left'}))
         # red circle
         self.walls.append(
             Wall({'row': 11, 'column': 1}, {'row': 12, 'column': 1}, {'node1': 'bottom', 'node2': 'top'}))
